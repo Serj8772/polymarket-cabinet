@@ -1,7 +1,7 @@
 """CRUD operations for Position model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel
 from sqlalchemy import func, select, update
@@ -92,7 +92,7 @@ class CRUDPosition(CRUDBase[Position, BaseModel, BaseModel]):
         if not positions_data:
             return 0
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         rows = []
         for p in positions_data:
             rows.append({

@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
 from app.models.user import User
-from app.schemas.auth import PolymarketCredsRequest
 
 
 class CRUDUser(CRUDBase[User, dict, dict]):

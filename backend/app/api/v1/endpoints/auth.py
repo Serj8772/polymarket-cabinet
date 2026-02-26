@@ -187,6 +187,7 @@ async def save_private_key(
     via py-clob-client so the user doesn't need to enter them manually.
     """
     from py_clob_client.client import ClobClient
+
     from app.core.config import settings as app_settings
 
     # Normalize: strip 0x prefix if present

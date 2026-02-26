@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -97,7 +97,7 @@ class MarketService:
                 return MarketDetailResponse.model_validate_json(cached)
 
         # Get from DB
-        market = await market_crud.get(db, id=market_id)
+        market = await market_crud.get(db, record_id=market_id)
         if market is None:
             return None
 
@@ -175,7 +175,7 @@ class MarketService:
 
             # Transform Gamma API response to our model format
             markets_data = []
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             for m in raw_markets:
                 market_id = m.get("condition_id") or m.get("id")

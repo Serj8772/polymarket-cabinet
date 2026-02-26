@@ -1,7 +1,6 @@
 """CRUD operations for Order model."""
 
 import uuid
-from datetime import datetime, timezone
 
 from pydantic import BaseModel
 from sqlalchemy import func, select, update

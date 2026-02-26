@@ -1,6 +1,6 @@
 """Security utilities: JWT tokens, signature verification, encryption."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from cryptography.fernet import Fernet
@@ -8,7 +8,6 @@ from eth_account import Account
 from eth_account.messages import encode_defunct
 
 from app.core.config import settings
-
 
 # --- JWT ---
 
@@ -25,7 +24,7 @@ def create_access_token(
     Returns:
         Encoded JWT string.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + (expires_delta or timedelta(minutes=settings.JWT_EXPIRE_MINUTES))
 
     payload = {

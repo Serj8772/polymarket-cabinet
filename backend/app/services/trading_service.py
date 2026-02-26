@@ -2,10 +2,10 @@
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import ApiCreds, OrderArgs, OrderType
+from py_clob_client.clob_types import ApiCreds, OrderArgs
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -272,7 +272,7 @@ class TradingService:
             existing.size = float(position.size)
             existing.status = "LIVE"
             existing.market_question = position.title
-            existing.placed_at = datetime.now(timezone.utc)
+            existing.placed_at = datetime.now(UTC)
         else:
             sl_order = Order(
                 user_id=user.id,
@@ -288,7 +288,7 @@ class TradingService:
                 status="LIVE",
                 market_question=position.title,
                 position_id=position.id,
-                placed_at=datetime.now(timezone.utc),
+                placed_at=datetime.now(UTC),
             )
             db.add(sl_order)
 
@@ -516,7 +516,7 @@ class TradingService:
                     # Get user for this position
                     from app.crud.user import user_crud
 
-                    user = await user_crud.get(db, id=position.user_id)
+                    user = await user_crud.get(db, record_id=position.user_id)
                     if not user or not user.has_private_key:
                         logger.error(
                             "Cannot execute SL: user %s has no private key",

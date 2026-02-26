@@ -1,7 +1,7 @@
 """Order service — order history, sync from Polymarket."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from py_clob_client.client import ClobClient
@@ -269,7 +269,7 @@ def _parse_datetime(value) -> datetime | None:
     if isinstance(value, (int, float)):
         # Unix timestamp (seconds or milliseconds)
         ts = value if value < 1e12 else value / 1000
-        return datetime.fromtimestamp(ts, tz=timezone.utc)
+        return datetime.fromtimestamp(ts, tz=UTC)
     if isinstance(value, str):
         try:
             # ISO format
@@ -280,7 +280,7 @@ def _parse_datetime(value) -> datetime | None:
             # Unix timestamp as string
             ts = float(value)
             ts = ts if ts < 1e12 else ts / 1000
-            return datetime.fromtimestamp(ts, tz=timezone.utc)
+            return datetime.fromtimestamp(ts, tz=UTC)
         except (ValueError, TypeError):
             pass
     return None

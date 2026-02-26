@@ -22,11 +22,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get(
         self,
         db: AsyncSession,
-        id: Any,
+        record_id: Any,
     ) -> ModelType | None:
         """Get single record by primary key."""
         result = await db.execute(
-            select(self.model).where(self.model.id == id)
+            select(self.model).where(self.model.id == record_id)
         )
         return result.scalar_one_or_none()
 
@@ -50,11 +50,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: CreateSchemaType | dict[str, Any],
     ) -> ModelType:
         """Create new record."""
-        if isinstance(obj_in, dict):
-            obj_data = obj_in
-        else:
-            obj_data = obj_in.model_dump()
-
+        obj_data = obj_in if isinstance(obj_in, dict) else obj_in.model_dump()
         db_obj = self.model(**obj_data)
         db.add(db_obj)
         await db.commit()
@@ -69,11 +65,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: UpdateSchemaType | dict[str, Any],
     ) -> ModelType:
         """Update existing record."""
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.model_dump(exclude_unset=True)
-
+        update_data = obj_in if isinstance(obj_in, dict) else obj_in.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_obj, field, value)
 
@@ -86,10 +78,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self,
         db: AsyncSession,
         *,
-        id: Any,
+        record_id: Any,
     ) -> ModelType | None:
         """Delete record by ID."""
-        obj = await self.get(db, id=id)
+        obj = await self.get(db, record_id=record_id)
         if obj:
             db.delete(obj)
             await db.commit()
