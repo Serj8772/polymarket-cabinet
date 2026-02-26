@@ -8,19 +8,26 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-# Async engine
+# Async engine — default pool (AsyncAdaptedQueuePool) for dev, NullPool for prod
+_engine_kwargs: dict = {
+    "echo": False,
+    "pool_pre_ping": True,
+}
+
+if settings.is_production:
+    _engine_kwargs["poolclass"] = NullPool
+else:
+    _engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+    _engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
+    _engine_kwargs["pool_recycle"] = 3600
+
 engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_pre_ping=True,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_recycle=3600,
-    poolclass=NullPool if settings.is_production else QueuePool,
+    **_engine_kwargs,
 )
 
 # Session factory

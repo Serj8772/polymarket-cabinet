@@ -1,6 +1,6 @@
 """Auth request/response schemas."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class NonceRequest(BaseModel):
@@ -60,11 +60,36 @@ class PolymarketCredsRequest(BaseModel):
     passphrase: str = Field(..., description="Polymarket API passphrase")
 
 
+class ProxyWalletRequest(BaseModel):
+    """Request to save Polymarket proxy wallet address."""
+
+    proxy_wallet: str = Field(
+        ...,
+        min_length=42,
+        max_length=42,
+        pattern=r"^0x[a-fA-F0-9]{40}$",
+        description="Polymarket proxy wallet address (found in polymarket.com profile)",
+        examples=["0x33492472B98A2a881848B3DeFf4dB7CB91f167f2"],
+    )
+
+
+class PrivateKeyRequest(BaseModel):
+    """Request to save wallet private key for trading."""
+
+    private_key: str = Field(
+        ...,
+        min_length=64,
+        max_length=66,
+        description="Wallet private key (hex, with or without 0x prefix)",
+    )
+
+
 class UserResponse(BaseModel):
     """User info response."""
 
-    wallet_address: str
-    has_polymarket_creds: bool
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    wallet_address: str
+    proxy_wallet: str | None = None
+    has_polymarket_creds: bool
+    has_private_key: bool = False

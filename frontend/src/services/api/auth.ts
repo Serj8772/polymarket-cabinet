@@ -5,6 +5,7 @@ import type {
   LoginRequest,
   NonceResponse,
   PolymarketCredsRequest,
+  ProxyWalletRequest,
   TokenResponse,
   UserResponse,
 } from "@/types/api";
@@ -31,6 +32,26 @@ export async function savePolymarketCreds(
 ): Promise<UserResponse> {
   const { data } = await apiClient.post<UserResponse>(
     "/auth/polymarket-creds",
+    body,
+  );
+  return data;
+}
+
+export async function saveProxyWallet(
+  body: ProxyWalletRequest,
+): Promise<UserResponse> {
+  const { data } = await apiClient.post<UserResponse>(
+    "/auth/proxy-wallet",
+    body,
+  );
+  return data;
+}
+
+export async function savePrivateKey(body: {
+  private_key: string;
+}): Promise<UserResponse> {
+  const { data } = await apiClient.post<UserResponse>(
+    "/auth/private-key",
     body,
   );
   return data;

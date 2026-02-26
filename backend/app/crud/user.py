@@ -61,5 +61,19 @@ class CRUDUser(CRUDBase[User, dict, dict]):
             },
         )
 
+    async def update_proxy_wallet(
+        self,
+        db: AsyncSession,
+        *,
+        user: User,
+        proxy_wallet: str,
+    ) -> User:
+        """Update user's Polymarket proxy wallet address."""
+        return await self.update(
+            db,
+            db_obj=user,
+            obj_in={"proxy_wallet": proxy_wallet.lower()},
+        )
+
 
 user_crud = CRUDUser(User)

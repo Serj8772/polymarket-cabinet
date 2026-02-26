@@ -25,6 +25,13 @@ class User(Base, TimestampMixin):
         comment="Ethereum wallet address (0x...)",
     )
 
+    # Polymarket proxy wallet address (holds positions & USDC on Polygon)
+    proxy_wallet: Mapped[str | None] = mapped_column(
+        String(42),
+        nullable=True,
+        comment="Polymarket proxy wallet address on Polygon",
+    )
+
     # Encrypted Polymarket L2 API credentials (optional)
     encrypted_api_key: Mapped[str | None] = mapped_column(
         Text,
@@ -42,6 +49,18 @@ class User(Base, TimestampMixin):
         comment="Fernet-encrypted Polymarket API passphrase",
     )
 
+    # Encrypted private key for order signing (optional, for trading)
+    encrypted_private_key: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Fernet-encrypted wallet private key for CLOB order signing",
+    )
+
+    @property
+    def has_private_key(self) -> bool:
+        """Check if user has stored a private key for trading."""
+        return self.encrypted_private_key is not None
+
     @property
     def has_polymarket_creds(self) -> bool:
         """Check if user has linked Polymarket API credentials."""
@@ -50,6 +69,15 @@ class User(Base, TimestampMixin):
             self.encrypted_api_secret,
             self.encrypted_passphrase,
         ])
+
+    @property
+    def portfolio_wallet(self) -> str:
+        """Wallet address used for fetching portfolio positions.
+
+        Returns proxy_wallet if set, otherwise falls back to EOA wallet.
+        Polymarket positions are held on proxy wallets (1-of-1 multisig on Polygon).
+        """
+        return self.proxy_wallet or self.wallet_address
 
     def __repr__(self) -> str:
         return f"<User {self.wallet_address}>"

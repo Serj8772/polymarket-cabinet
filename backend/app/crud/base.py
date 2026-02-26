@@ -91,6 +91,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """Delete record by ID."""
         obj = await self.get(db, id=id)
         if obj:
-            await db.delete(obj)
+            db.delete(obj)
             await db.commit()
         return obj

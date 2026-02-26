@@ -12,7 +12,13 @@ export interface TokenResponse {
 
 export interface UserResponse {
   wallet_address: string;
+  proxy_wallet: string | null;
   has_polymarket_creds: boolean;
+  has_private_key: boolean;
+}
+
+export interface ProxyWalletRequest {
+  proxy_wallet: string;
 }
 
 export interface LoginRequest {

@@ -57,3 +57,19 @@ async def get_current_user(
         )
 
     return user
+
+
+async def require_polymarket_creds(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Get current user and verify they have Polymarket API credentials.
+
+    Raises:
+        HTTPException 403: If user has no Polymarket credentials.
+    """
+    if not current_user.has_polymarket_creds:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Polymarket API credentials required. Save them via POST /api/v1/auth/polymarket-creds",
+        )
+    return current_user
