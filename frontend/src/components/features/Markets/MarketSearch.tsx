@@ -14,7 +14,7 @@ export function MarketSearch({
   placeholder = "Search markets...",
 }: MarketSearchProps) {
   const [localValue, setLocalValue] = useState(value);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Sync external value changes
   useEffect(() => {

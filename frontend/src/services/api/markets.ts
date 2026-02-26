@@ -2,7 +2,6 @@
 
 import { apiClient } from "./client";
 import type {
-  Market,
   MarketDetail,
   MarketListResponse,
   MarketSearchParams,
