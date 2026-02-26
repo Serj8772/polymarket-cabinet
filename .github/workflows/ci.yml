@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -114,6 +114,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
+            set -e
+
             cd ${{ secrets.DEPLOY_PATH || '/opt/polymarket' }}
 
             # Pull latest code
@@ -121,7 +123,11 @@ jobs:
 
             # Build and restart
             docker compose -f docker-compose.prod.yml build
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Wait for backend to be healthy
+            echo "Waiting for backend to start..."
+            sleep 10
 
             # Run migrations
             docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head

@@ -40,6 +40,9 @@ htmlcov/
 # Docker
 docker-compose.override.yml
 
+# Claude Code
+.claude/
+
 # Misc
 *.log
 *.sqlite3
