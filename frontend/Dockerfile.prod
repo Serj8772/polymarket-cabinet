@@ -6,8 +6,8 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+COPY package.json ./
+RUN npm install --ignore-scripts && npm install @rollup/rollup-linux-x64-musl && npm rebuild
 
 COPY . .
 RUN npm run build
