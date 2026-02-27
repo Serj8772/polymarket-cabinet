@@ -28,6 +28,7 @@ Thumbs.db
 # Node
 node_modules/
 npm-debug.log*
+frontend/package-lock.json
 
 # Build
 frontend/dist/
