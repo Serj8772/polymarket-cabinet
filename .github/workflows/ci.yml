@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+  IMAGE_PREFIX: ghcr.io/serj8772/polymarket-cabinet
 
 jobs:
   # ─── Backend Lint & Test ───
