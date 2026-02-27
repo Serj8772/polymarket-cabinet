@@ -31,8 +31,8 @@ case "${1:-help}" in
       exit 1
     fi
 
-    # Build and start all services
-    docker compose -f "$COMPOSE_FILE" build
+    # Pull pre-built images and start all services
+    docker compose -f "$COMPOSE_FILE" pull backend frontend
     docker compose -f "$COMPOSE_FILE" up -d
 
     # Wait for DB to be ready
@@ -53,8 +53,8 @@ case "${1:-help}" in
     # Pull latest code
     git pull origin main
 
-    # Rebuild images
-    docker compose -f "$COMPOSE_FILE" build
+    # Pull pre-built images from GHCR
+    docker compose -f "$COMPOSE_FILE" pull backend frontend
 
     # Rolling restart (zero downtime for stateless services)
     docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
@@ -107,8 +107,8 @@ case "${1:-help}" in
     echo "Usage: $0 <command>"
     echo ""
     echo "Commands:"
-    echo "  setup    - First time setup (build, start, migrate)"
-    echo "  deploy   - Pull, rebuild, restart, migrate"
+    echo "  setup    - First time setup (pull images, start, migrate)"
+    echo "  deploy   - Pull code, pull images, restart, migrate"
     echo "  logs     - View logs (optional: logs <service>)"
     echo "  restart  - Restart all services"
     echo "  stop     - Stop all services"

@@ -1,10 +1,6 @@
-version: "3.8"
-
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/serj8772/polymarket-cabinet-backend:latest
     expose:
       - "8000"
     environment:
@@ -30,9 +26,7 @@ services:
       retries: 3
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/serj8772/polymarket-cabinet-frontend:latest
     expose:
       - "80"
     depends_on:

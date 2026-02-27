@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
 jobs:
   # ─── Backend Lint & Test ───
   backend:
@@ -97,11 +101,45 @@ jobs:
       - name: Build
         run: npm run build
 
-  # ─── Deploy to VPS ───
-  deploy:
+  # ─── Build & Push Docker Images ───
+  docker:
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}-backend:latest
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}-frontend:latest
+
+  # ─── Deploy to VPS ───
+  deploy:
+    needs: [docker]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Deploy to VPS via SSH
@@ -116,11 +154,13 @@ jobs:
 
             cd ${{ secrets.DEPLOY_PATH || '/opt/polymarket' }}
 
-            # Pull latest code
+            # Pull latest code (for compose file, nginx config, .env, scripts)
             git pull origin main
 
-            # Build and restart
-            docker compose -f docker-compose.prod.yml build
+            # Pull pre-built images from GHCR
+            docker compose -f docker-compose.prod.yml pull backend frontend
+
+            # Restart with new images
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             # Wait for backend to be healthy
