@@ -135,6 +135,12 @@ async def set_stop_loss(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+    except Exception:
+        logger.exception("Set stop loss failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Set stop loss failed. Please try again later.",
+        )
 
 
 @router.delete("/stop-loss/{position_id}", response_model=TradingResponse)
@@ -153,6 +159,12 @@ async def remove_stop_loss(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+    except Exception:
+        logger.exception("Remove stop loss failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Remove stop loss failed. Please try again later.",
         )
 
 

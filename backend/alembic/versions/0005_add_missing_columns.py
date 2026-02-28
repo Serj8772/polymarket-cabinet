@@ -113,6 +113,28 @@ def upgrade() -> None:
         ),
     )
 
+    # ─── Orders: add position_id FK (for SL/TP orders) ───
+    op.add_column(
+        "orders",
+        sa.Column(
+            "position_id",
+            sa.UUID(),
+            nullable=True,
+            comment="Source position (for SL/TP orders)",
+        ),
+    )
+    op.create_foreign_key(
+        "fk_orders_position_id",
+        "orders",
+        "positions",
+        ["position_id"],
+        ["id"],
+        ondelete="SET NULL",
+    )
+    op.create_index(
+        op.f("ix_orders_position_id"), "orders", ["position_id"]
+    )
+
     # ─── Drop FK from positions.market_id → markets.id ───
     # Gamma API uses numeric id for markets, Data API uses conditionId (0x-hash)
     # These are different systems, so FK is invalid
@@ -122,6 +144,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Drop orders.position_id
+    op.drop_index(op.f("ix_orders_position_id"), table_name="orders")
+    op.drop_constraint("fk_orders_position_id", "orders", type_="foreignkey")
+    op.drop_column("orders", "position_id")
+
     # Re-add FK
     op.create_foreign_key(
         "positions_market_id_fkey",
