@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime
 
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import ApiCreds, OrderArgs
+from py_clob_client.clob_types import ApiCreds, MarketOrderArgs, OrderArgs, OrderType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -101,41 +101,38 @@ class TradingService:
     ) -> dict:
         """Sell entire position at market price (FOK order).
 
-        Places a Fill-or-Kill sell order at the current best bid price.
+        Uses MarketOrderArgs + FOK order type for immediate execution.
+        FOK = Fill or Kill: fills entire amount instantly or cancels.
+        The CLOB matches against the orderbook at the best available prices.
         """
         position = await self._get_position(db, user, position_id)
 
-        if float(position.size) <= 0:
+        size = float(position.size)
+        if size <= 0:
             raise ValueError("Position has no tokens to sell")
-
-        # Get current best bid price for this token
-        bid_price = await polymarket_client.get_price(
-            position.token_id, side="sell"
-        )
-        if bid_price is None or bid_price <= 0:
-            raise ValueError("Cannot determine market price. No bids available.")
 
         client = self._get_clob_client(user)
 
-        order_args = OrderArgs(
+        market_args = MarketOrderArgs(
             token_id=position.token_id,
-            price=round(bid_price, 2),
-            size=float(position.size),
+            amount=size,
             side="SELL",
+            order_type=OrderType.FOK,
         )
 
         logger.info(
-            "Market sell: token=%s size=%s price=%s user=%s",
+            "Market sell (FOK): token=%s size=%s user=%s",
             position.token_id[:12],
-            position.size,
-            bid_price,
+            size,
             user.wallet_address[:10],
         )
 
-        # Place FOK order (fill entire amount or cancel)
-        result = client.create_and_post_order(order_args, options=None)
+        # Create signed FOK order (calculates price from orderbook internally)
+        signed_order = client.create_market_order(market_args)
 
-        # Post with FOK type
+        # Post as FOK — fills immediately or cancels entirely
+        result = client.post_order(signed_order, orderType=OrderType.FOK)
+
         if hasattr(result, "id"):
             order_id = result.id
         elif isinstance(result, dict):
@@ -143,11 +140,11 @@ class TradingService:
         else:
             order_id = str(result)
 
-        logger.info("Market sell placed: order_id=%s", order_id)
+        logger.info("Market sell (FOK) placed: order_id=%s", order_id)
 
         return {
             "success": True,
-            "message": f"Market sell order placed for {float(position.size):.2f} tokens at {bid_price:.4f}",
+            "message": f"Market sell (FOK) placed for {size:.2f} tokens",
             "order_id": order_id,
         }
 
