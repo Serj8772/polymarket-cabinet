@@ -25,8 +25,16 @@ POLYGON_CHAIN_ID = 137
 POLY_PROXY_SIG_TYPE = 2
 
 
+# Errors that indicate the position can't be sold (no point retrying)
+_PERMANENT_ERRORS = {"not enough balance", "allowance", "insufficient"}
+
+
 class TradingService:
     """Business logic for trading operations on Polymarket CLOB."""
+
+    # Track SL execution failures per position (in-memory, resets on restart)
+    _sl_fail_counts: dict[str, int] = {}
+    SL_MAX_RETRIES = 10
 
     def _get_clob_client(self, user: User) -> ClobClient:
         """Create an authenticated ClobClient for the user.
@@ -473,6 +481,26 @@ class TradingService:
 
         return {"success": True, "message": "Order cancelled"}
 
+    async def _cancel_sl(
+        self,
+        db: AsyncSession,
+        position: Position,
+        reason: str,
+    ) -> None:
+        """Cancel a stop loss and mark the order as FAILED."""
+        position.stop_loss_price = None
+        synthetic_id = f"sl-{position.id}"
+        sl_order = await order_crud.get_by_synthetic_id(
+            db,
+            user_id=position.user_id,
+            polymarket_order_id=synthetic_id,
+        )
+        if sl_order and sl_order.status == "LIVE":
+            sl_order.status = "CANCELLED"
+        await db.commit()
+        self._sl_fail_counts.pop(str(position.id), None)
+        logger.error("SL cancelled for position %s: %s", position.id, reason)
+
     async def check_stop_losses(self, db: AsyncSession) -> int:
         """Background job: check all active stop losses and trigger sells.
 
@@ -493,7 +521,16 @@ class TradingService:
 
         triggered = 0
         for position in positions:
+            pos_key = str(position.id)
             try:
+                # Skip if already exceeded retry limit
+                if self._sl_fail_counts.get(pos_key, 0) >= self.SL_MAX_RETRIES:
+                    await self._cancel_sl(
+                        db, position,
+                        f"exceeded {self.SL_MAX_RETRIES} retries",
+                    )
+                    continue
+
                 # Get current price
                 current_price = await polymarket_client.get_price(
                     position.token_id, side="sell"
@@ -505,12 +542,16 @@ class TradingService:
                 sl_price = float(position.stop_loss_price)
 
                 if current_price <= sl_price:
+                    fail_count = self._sl_fail_counts.get(pos_key, 0)
                     logger.warning(
-                        "SL TRIGGERED: position=%s token=%s current=%.4f sl=%.4f",
+                        "SL TRIGGERED: position=%s token=%s current=%.4f "
+                        "sl=%.4f attempt=%d/%d",
                         position.id,
                         position.token_id[:12],
                         current_price,
                         sl_price,
+                        fail_count + 1,
+                        self.SL_MAX_RETRIES,
                     )
 
                     # Get user for this position
@@ -549,13 +590,29 @@ class TradingService:
                             sl_order.size_filled = sl_order.size
 
                         await db.commit()
+                        self._sl_fail_counts.pop(pos_key, None)
                         triggered += 1
                     except Exception as e:
-                        logger.error(
-                            "SL execution failed for position %s: %s",
-                            position.id,
-                            e,
+                        err_msg = str(e).lower()
+                        self._sl_fail_counts[pos_key] = (
+                            self._sl_fail_counts.get(pos_key, 0) + 1
                         )
+
+                        # Permanent error — cancel immediately
+                        if any(kw in err_msg for kw in _PERMANENT_ERRORS):
+                            await self._cancel_sl(
+                                db, position,
+                                f"permanent error: {e}",
+                            )
+                        else:
+                            logger.error(
+                                "SL execution failed for position %s "
+                                "(attempt %d/%d): %s",
+                                position.id,
+                                self._sl_fail_counts[pos_key],
+                                self.SL_MAX_RETRIES,
+                                e,
+                            )
             except Exception as e:
                 logger.error(
                     "SL check failed for position %s: %s",
@@ -564,7 +621,11 @@ class TradingService:
                 )
 
         if triggered:
-            logger.info("Stop loss check: %d triggered out of %d active", triggered, len(positions))
+            logger.info(
+                "Stop loss check: %d triggered out of %d active",
+                triggered,
+                len(positions),
+            )
 
         return triggered
 

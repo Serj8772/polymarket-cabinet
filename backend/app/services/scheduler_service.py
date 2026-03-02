@@ -1,6 +1,13 @@
-"""Background task scheduler using APScheduler."""
+"""Background task scheduler using APScheduler.
+
+IMPORTANT: When running with multiple Uvicorn workers (--workers N),
+each worker starts its own scheduler. We use a file lock to ensure
+only ONE worker runs the scheduler, preventing duplicate job execution.
+"""
 
 import logging
+import os
+import tempfile
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -9,7 +16,44 @@ from app.services.market_service import market_service
 
 logger = logging.getLogger(__name__)
 
-scheduler = AsyncIOScheduler()
+scheduler: AsyncIOScheduler | None = None
+_lock_fd: int | None = None
+
+LOCK_FILE = os.path.join(tempfile.gettempdir(), "polymarket_scheduler.lock")
+
+
+def _acquire_scheduler_lock() -> bool:
+    """Try to acquire an exclusive file lock for the scheduler.
+
+    Returns True if this process should run the scheduler.
+    Only one worker will succeed; others will skip scheduler startup.
+    """
+    global _lock_fd
+    try:
+        import fcntl
+
+        _lock_fd = os.open(LOCK_FILE, os.O_CREAT | os.O_RDWR)
+        fcntl.flock(_lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except (OSError, BlockingIOError):
+        if _lock_fd is not None:
+            os.close(_lock_fd)
+            _lock_fd = None
+        return False
+
+
+def _release_scheduler_lock() -> None:
+    """Release the scheduler file lock."""
+    global _lock_fd
+    if _lock_fd is not None:
+        try:
+            import fcntl
+
+            fcntl.flock(_lock_fd, fcntl.LOCK_UN)
+            os.close(_lock_fd)
+        except OSError:
+            pass
+        _lock_fd = None
 
 
 async def sync_markets_job() -> None:
@@ -36,7 +80,19 @@ async def check_stop_losses_job() -> None:
 
 
 def start_scheduler() -> None:
-    """Start the background scheduler with all jobs."""
+    """Start the background scheduler with all jobs.
+
+    Uses file locking so only one worker starts the scheduler
+    when running with multiple Uvicorn workers.
+    """
+    global scheduler
+
+    if not _acquire_scheduler_lock():
+        logger.info("Another worker owns the scheduler — skipping")
+        return
+
+    scheduler = AsyncIOScheduler()
+
     scheduler.add_job(
         sync_markets_job,
         "interval",
@@ -66,5 +122,9 @@ def start_scheduler() -> None:
 
 def stop_scheduler() -> None:
     """Stop the background scheduler."""
-    scheduler.shutdown(wait=False)
-    logger.info("Background scheduler stopped")
+    global scheduler
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
+        scheduler = None
+        logger.info("Background scheduler stopped")
+    _release_scheduler_lock()
