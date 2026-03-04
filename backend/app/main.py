@@ -17,7 +17,8 @@ from app.models.market import Market  # noqa: F401
 from app.models.price_snapshot import PriceSnapshot  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.services.polymarket_client import polymarket_client
-from app.services.scheduler_service import start_scheduler, stop_scheduler
+from app.services.scheduler_service import has_scheduler_lock, start_scheduler, stop_scheduler
+from app.services.sl_ws_monitor import sl_ws_monitor
 from app.utils.redis_client import close_redis, init_redis
 
 # Configure logging
@@ -42,12 +43,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Start background scheduler (market sync every 10 min)
     start_scheduler()
 
+    # Start WebSocket SL monitor (only on the worker that owns the scheduler lock)
+    if has_scheduler_lock():
+        await sl_ws_monitor.start()
+
     logger.info("Application started successfully")
 
     yield
 
     # Shutdown
     logger.info("Shutting down...")
+    await sl_ws_monitor.stop()
     stop_scheduler()
     await polymarket_client.close()
     await close_redis()

@@ -27,6 +27,9 @@ python-multipart>=0.0.18
 # Async HTTP
 httpx>=0.28.0
 
+# WebSocket
+websockets>=13.0
+
 # Background Tasks
 APScheduler>=3.10.4
 

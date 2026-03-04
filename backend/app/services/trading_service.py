@@ -29,6 +29,16 @@ POLY_PROXY_SIG_TYPE = 2
 _PERMANENT_ERRORS = {"not enough balance", "allowance", "insufficient"}
 
 
+def _notify_sl_changed() -> None:
+    """Notify the WebSocket SL monitor that subscriptions may need updating."""
+    try:
+        from app.services.sl_ws_monitor import sl_ws_monitor
+
+        sl_ws_monitor.notify_sl_changed()
+    except Exception:
+        pass  # Monitor not started yet or import error — safe to ignore
+
+
 class TradingService:
     """Business logic for trading operations on Polymarket CLOB."""
 
@@ -251,10 +261,7 @@ class TradingService:
         position_id: str,
         price: float,
     ) -> dict:
-        """Set stop loss — saves the SL price in DB for background monitoring.
-
-        The scheduler checks prices every 30s and auto-sells when triggered.
-        """
+        """Set stop loss — saves the SL price in DB for background monitoring."""
         position = await self._get_position(db, user, position_id)
 
         if float(position.size) <= 0:
@@ -298,6 +305,7 @@ class TradingService:
             db.add(sl_order)
 
         await db.commit()
+        _notify_sl_changed()
 
         logger.info(
             "SL set: position=%s price=%s user=%s",
@@ -331,6 +339,7 @@ class TradingService:
             sl_order.status = "CANCELLED"
 
         await db.commit()
+        _notify_sl_changed()
 
         return {"success": True, "message": "Stop loss removed"}
 
@@ -361,6 +370,7 @@ class TradingService:
                 position = await self._get_position(db, user, str(order.position_id))
                 position.stop_loss_price = new_price
             await db.commit()
+            _notify_sl_changed()
             return {"success": True, "message": f"Stop loss updated to {new_price:.2f}"}
 
         # CLOB order: cancel old, create new
@@ -451,6 +461,7 @@ class TradingService:
                     pass
             order.status = "CANCELLED"
             await db.commit()
+            _notify_sl_changed()
             return {"success": True, "message": "Stop loss cancelled"}
 
         # CLOB order: cancel on exchange
@@ -484,7 +495,7 @@ class TradingService:
         position: Position,
         reason: str,
     ) -> None:
-        """Cancel a stop loss and mark the order as FAILED."""
+        """Cancel a stop loss and mark the order as CANCELLED."""
         position.stop_loss_price = None
         synthetic_id = f"sl-{position.id}"
         sl_order = await order_crud.get_by_synthetic_id(
@@ -498,13 +509,98 @@ class TradingService:
         self._sl_fail_counts.pop(str(position.id), None)
         logger.error("SL cancelled for position %s: %s", position.id, reason)
 
-    async def check_stop_losses(self, db: AsyncSession) -> int:
-        """Background job: check all active stop losses and trigger sells.
+    async def execute_sl_for_position(
+        self,
+        db: AsyncSession,
+        position: Position,
+        current_price: float,
+    ) -> bool:
+        """Execute stop loss for a single position.
 
-        Called by the scheduler every 30 seconds.
+        Called by both the WS monitor (real-time) and the polling fallback.
+        Returns True if SL was triggered and executed successfully.
+        """
+        pos_key = str(position.id)
+
+        # Check retry limit
+        if self._sl_fail_counts.get(pos_key, 0) >= self.SL_MAX_RETRIES:
+            await self._cancel_sl(
+                db, position, f"exceeded {self.SL_MAX_RETRIES} retries",
+            )
+            return False
+
+        sl_price = float(position.stop_loss_price)  # type: ignore
+        if current_price > sl_price:
+            return False
+
+        fail_count = self._sl_fail_counts.get(pos_key, 0)
+        logger.warning(
+            "SL TRIGGERED: position=%s token=%s current=%.4f "
+            "sl=%.4f attempt=%d/%d",
+            position.id,
+            position.token_id[:12],
+            current_price,
+            sl_price,
+            fail_count + 1,
+            self.SL_MAX_RETRIES,
+        )
+
+        # Get user for this position
+        from app.crud.user import user_crud
+
+        user = await user_crud.get(db, record_id=position.user_id)
+        if not user or not user.has_private_key:
+            logger.error(
+                "Cannot execute SL: user %s has no private key",
+                position.user_id,
+            )
+            return False
+
+        try:
+            sell_result = await self.market_sell(db, user, str(position.id))
+            logger.info("SL executed: position=%s result=%s", position.id, sell_result)
+
+            # Clear SL after execution
+            position.stop_loss_price = None
+
+            # Mark SL order as MATCHED
+            synthetic_id = f"sl-{position.id}"
+            sl_order = await order_crud.get_by_synthetic_id(
+                db, user_id=position.user_id, polymarket_order_id=synthetic_id,
+            )
+            if sl_order and sl_order.status == "LIVE":
+                sl_order.status = "MATCHED"
+                sl_order.size_filled = sl_order.size
+
+            await db.commit()
+            self._sl_fail_counts.pop(pos_key, None)
+            return True
+
+        except Exception as e:
+            err_msg = str(e).lower()
+            self._sl_fail_counts[pos_key] = (
+                self._sl_fail_counts.get(pos_key, 0) + 1
+            )
+
+            # Permanent error — cancel immediately
+            if any(kw in err_msg for kw in _PERMANENT_ERRORS):
+                await self._cancel_sl(db, position, f"permanent error: {e}")
+            else:
+                logger.error(
+                    "SL execution failed for position %s (attempt %d/%d): %s",
+                    position.id,
+                    self._sl_fail_counts[pos_key],
+                    self.SL_MAX_RETRIES,
+                    e,
+                )
+            return False
+
+    async def check_stop_losses(self, db: AsyncSession) -> int:
+        """Polling fallback: check all active stop losses and trigger sells.
+
+        Called by the scheduler (60s fallback when WS is disconnected).
         Returns number of SL triggered.
         """
-        # Find all positions with active stop loss
         result = await db.execute(
             select(Position)
             .where(Position.stop_loss_price.isnot(None))
@@ -518,108 +614,23 @@ class TradingService:
 
         triggered = 0
         for position in positions:
-            pos_key = str(position.id)
             try:
-                # Skip if already exceeded retry limit
-                if self._sl_fail_counts.get(pos_key, 0) >= self.SL_MAX_RETRIES:
-                    await self._cancel_sl(
-                        db, position,
-                        f"exceeded {self.SL_MAX_RETRIES} retries",
-                    )
-                    continue
-
-                # Get current price
                 current_price = await polymarket_client.get_price(
                     position.token_id, side="sell"
                 )
-
                 if current_price is None:
                     continue
 
-                sl_price = float(position.stop_loss_price)
-
-                if current_price <= sl_price:
-                    fail_count = self._sl_fail_counts.get(pos_key, 0)
-                    logger.warning(
-                        "SL TRIGGERED: position=%s token=%s current=%.4f "
-                        "sl=%.4f attempt=%d/%d",
-                        position.id,
-                        position.token_id[:12],
-                        current_price,
-                        sl_price,
-                        fail_count + 1,
-                        self.SL_MAX_RETRIES,
-                    )
-
-                    # Get user for this position
-                    from app.crud.user import user_crud
-
-                    user = await user_crud.get(db, record_id=position.user_id)
-                    if not user or not user.has_private_key:
-                        logger.error(
-                            "Cannot execute SL: user %s has no private key",
-                            position.user_id,
-                        )
-                        continue
-
-                    # Execute market sell
-                    try:
-                        sell_result = await self.market_sell(
-                            db, user, str(position.id)
-                        )
-                        logger.info(
-                            "SL executed: position=%s result=%s",
-                            position.id,
-                            sell_result,
-                        )
-                        # Clear SL after execution
-                        position.stop_loss_price = None
-
-                        # Mark SL order as MATCHED
-                        synthetic_id = f"sl-{position.id}"
-                        sl_order = await order_crud.get_by_synthetic_id(
-                            db,
-                            user_id=position.user_id,
-                            polymarket_order_id=synthetic_id,
-                        )
-                        if sl_order and sl_order.status == "LIVE":
-                            sl_order.status = "MATCHED"
-                            sl_order.size_filled = sl_order.size
-
-                        await db.commit()
-                        self._sl_fail_counts.pop(pos_key, None)
-                        triggered += 1
-                    except Exception as e:
-                        err_msg = str(e).lower()
-                        self._sl_fail_counts[pos_key] = (
-                            self._sl_fail_counts.get(pos_key, 0) + 1
-                        )
-
-                        # Permanent error — cancel immediately
-                        if any(kw in err_msg for kw in _PERMANENT_ERRORS):
-                            await self._cancel_sl(
-                                db, position,
-                                f"permanent error: {e}",
-                            )
-                        else:
-                            logger.error(
-                                "SL execution failed for position %s "
-                                "(attempt %d/%d): %s",
-                                position.id,
-                                self._sl_fail_counts[pos_key],
-                                self.SL_MAX_RETRIES,
-                                e,
-                            )
+                if await self.execute_sl_for_position(db, position, current_price):
+                    triggered += 1
             except Exception as e:
                 logger.error(
-                    "SL check failed for position %s: %s",
-                    position.id,
-                    e,
+                    "SL check failed for position %s: %s", position.id, e,
                 )
 
         if triggered:
             logger.info(
-                "Stop loss check: %d triggered out of %d active",
+                "Fallback SL check: %d triggered out of %d active",
                 triggered,
                 len(positions),
             )

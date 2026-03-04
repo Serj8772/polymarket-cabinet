@@ -67,14 +67,19 @@ async def sync_markets_job() -> None:
 
 
 async def check_stop_losses_job() -> None:
-    """Background job: check stop loss triggers every 30 seconds."""
+    """Fallback SL polling job — skipped when WebSocket monitor is connected."""
+    from app.services.sl_ws_monitor import sl_ws_monitor
     from app.services.trading_service import trading_service
+
+    if sl_ws_monitor.is_connected:
+        logger.debug("WS monitor active, skipping polling SL check")
+        return
 
     async with async_session_maker() as db:
         try:
             triggered = await trading_service.check_stop_losses(db)
             if triggered:
-                logger.info("Stop loss check: %d positions triggered", triggered)
+                logger.info("SL fallback poll: %d positions triggered", triggered)
         except Exception:
             logger.exception("Failed to check stop losses")
 
@@ -107,17 +112,22 @@ def start_scheduler() -> None:
         replace_existing=True,
     )
 
-    # Stop loss monitoring — every 15 seconds
+    # Stop loss fallback polling — every 60 seconds (primary: WebSocket monitor)
     scheduler.add_job(
         check_stop_losses_job,
         "interval",
-        seconds=15,
+        seconds=60,
         id="check_stop_losses",
         replace_existing=True,
     )
 
     scheduler.start()
-    logger.info("Background scheduler started (markets: 10min, SL monitor: 15s)")
+    logger.info("Background scheduler started (markets: 10min, SL fallback: 60s)")
+
+
+def has_scheduler_lock() -> bool:
+    """Return True if this worker owns the scheduler lock."""
+    return scheduler is not None
 
 
 def stop_scheduler() -> None:
