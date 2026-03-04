@@ -107,17 +107,17 @@ def start_scheduler() -> None:
         replace_existing=True,
     )
 
-    # Stop loss monitoring — every 30 seconds
+    # Stop loss monitoring — every 15 seconds
     scheduler.add_job(
         check_stop_losses_job,
         "interval",
-        seconds=30,
+        seconds=15,
         id="check_stop_losses",
         replace_existing=True,
     )
 
     scheduler.start()
-    logger.info("Background scheduler started (markets: 10min, SL monitor: 30s)")
+    logger.info("Background scheduler started (markets: 10min, SL monitor: 15s)")
 
 
 def stop_scheduler() -> None:
