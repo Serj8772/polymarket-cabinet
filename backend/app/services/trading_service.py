@@ -514,6 +514,8 @@ class TradingService:
         db: AsyncSession,
         position: Position,
         current_price: float,
+        *,
+        spread_bps: float | None = None,
     ) -> bool:
         """Execute stop loss for a single position.
 
@@ -534,13 +536,15 @@ class TradingService:
             return False
 
         fail_count = self._sl_fail_counts.get(pos_key, 0)
+        spread_str = f"{spread_bps:.0f}bps" if spread_bps is not None else "N/A"
         logger.warning(
             "SL TRIGGERED: position=%s token=%s current=%.4f "
-            "sl=%.4f attempt=%d/%d",
+            "sl=%.4f spread=%s attempt=%d/%d",
             position.id,
             position.token_id[:12],
             current_price,
             sl_price,
+            spread_str,
             fail_count + 1,
             self.SL_MAX_RETRIES,
         )
