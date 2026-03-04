@@ -9,12 +9,14 @@ interface AuthState {
   isConnected: boolean;
   hasPolymarketCreds: boolean;
   hasPrivateKey: boolean;
+  autoSLPercent: number | null;
 
   setWallet: (wallet: string | null) => void;
   setProxyWallet: (proxyWallet: string | null) => void;
   setJwt: (jwt: string | null) => void;
   setHasPolymarketCreds: (value: boolean) => void;
   setHasPrivateKey: (value: boolean) => void;
+  setAutoSLPercent: (value: number | null) => void;
   logout: () => void;
 }
 
@@ -25,6 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isConnected: false,
   hasPolymarketCreds: false,
   hasPrivateKey: false,
+  autoSLPercent: null,
 
   setWallet: (wallet) => set({ wallet, isConnected: !!wallet }),
 
@@ -43,6 +46,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setHasPrivateKey: (value) => set({ hasPrivateKey: value }),
 
+  setAutoSLPercent: (value) => set({ autoSLPercent: value }),
+
   logout: () => {
     localStorage.removeItem("jwt_token");
     set({
@@ -52,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isConnected: false,
       hasPolymarketCreds: false,
       hasPrivateKey: false,
+      autoSLPercent: null,
     });
   },
 }));

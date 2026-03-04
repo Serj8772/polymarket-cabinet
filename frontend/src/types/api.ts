@@ -15,6 +15,7 @@ export interface UserResponse {
   proxy_wallet: string | null;
   has_polymarket_creds: boolean;
   has_private_key: boolean;
+  auto_sl_percent: number | null;
 }
 
 export interface ProxyWalletRequest {

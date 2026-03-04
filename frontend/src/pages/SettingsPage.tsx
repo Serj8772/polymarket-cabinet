@@ -4,10 +4,10 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 import { useAuthStore } from "@/store/authStore";
-import { savePolymarketCreds, saveProxyWallet, savePrivateKey } from "@/services/api/auth";
+import { savePolymarketCreds, saveProxyWallet, savePrivateKey, saveAutoSL } from "@/services/api/auth";
 
 export function SettingsPage() {
-  const { wallet, proxyWallet, hasPolymarketCreds, hasPrivateKey, setHasPolymarketCreds, setHasPrivateKey, setProxyWallet } =
+  const { wallet, proxyWallet, hasPolymarketCreds, hasPrivateKey, autoSLPercent, setHasPolymarketCreds, setHasPrivateKey, setProxyWallet, setAutoSLPercent } =
     useAuthStore();
 
   // Proxy wallet form
@@ -79,6 +79,50 @@ export function SettingsPage() {
     apiSecret.trim() !== "" &&
     passphrase.trim() !== "" &&
     !saving;
+
+  // Auto stop-loss
+  const [slEnabled, setSLEnabled] = useState(autoSLPercent !== null);
+  const [slPercent, setSLPercent] = useState(autoSLPercent?.toString() ?? "15");
+  const [savingSL, setSavingSL] = useState(false);
+
+  async function handleToggleSL() {
+    const newEnabled = !slEnabled;
+    setSLEnabled(newEnabled);
+    setSavingSL(true);
+    try {
+      const pct = newEnabled ? parseFloat(slPercent) || 15 : null;
+      const user = await saveAutoSL({ percent: pct });
+      setAutoSLPercent(user.auto_sl_percent);
+      toast.success(newEnabled ? "Auto stop-loss enabled!" : "Auto stop-loss disabled!");
+    } catch (err: unknown) {
+      setSLEnabled(!newEnabled); // revert on error
+      const error = err as Error & { response?: { data?: { detail?: string } } };
+      const message = error.response?.data?.detail || "Failed to update auto stop-loss";
+      toast.error(message);
+    } finally {
+      setSavingSL(false);
+    }
+  }
+
+  async function handleSaveSLPercent() {
+    const pct = parseFloat(slPercent);
+    if (isNaN(pct) || pct < 1 || pct > 50) {
+      toast.error("Percentage must be between 1 and 50");
+      return;
+    }
+    setSavingSL(true);
+    try {
+      const user = await saveAutoSL({ percent: pct });
+      setAutoSLPercent(user.auto_sl_percent);
+      toast.success(`Auto stop-loss set to -${pct}%`);
+    } catch (err: unknown) {
+      const error = err as Error & { response?: { data?: { detail?: string } } };
+      const message = error.response?.data?.detail || "Failed to update auto stop-loss";
+      toast.error(message);
+    } finally {
+      setSavingSL(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -333,6 +377,101 @@ export function SettingsPage() {
         </form>
       </section>
 
+      {/* Auto Stop-Loss */}
+      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-[var(--text-primary)]">
+            Auto Stop-Loss
+          </h3>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={slEnabled}
+            disabled={savingSL}
+            onClick={handleToggleSL}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+              slEnabled ? "bg-[var(--accent-green)]" : "bg-[var(--bg-tertiary)]"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                slEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        <p className="mb-4 text-sm text-[var(--text-secondary)]">
+          Automatically set a stop-loss when new positions are detected during portfolio sync.
+          The stop-loss price will be calculated as entry price minus the specified percentage.
+        </p>
+
+        {slEnabled && (
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <label
+                htmlFor="sl-percent"
+                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+              >
+                Stop-Loss Percentage
+              </label>
+              <div className="relative">
+                <input
+                  id="sl-percent"
+                  type="number"
+                  min="1"
+                  max="50"
+                  step="0.5"
+                  value={slPercent}
+                  onChange={(e) => setSLPercent(e.target.value)}
+                  className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 pr-8 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
+                  %
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Example: 15% means SL at entry price -15% (from 1 to 50)
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSL}
+              onClick={handleSaveSLPercent}
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {savingSL ? (
+                <>
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </button>
+          </div>
+        )}
+      </section>
+
       {/* Polymarket API Credentials */}
       <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
         <div className="mb-4 flex items-center justify-between">
@@ -465,6 +604,11 @@ export function SettingsPage() {
             <strong>Trading Key</strong> — Your wallet private key, used to sign CLOB
             orders (market sell, take profit). Encrypted with Fernet (AES-128-CBC) before
             storage and never exposed. Required for trading.
+          </p>
+          <p>
+            <strong>Auto Stop-Loss</strong> — When enabled, a stop-loss order is
+            automatically placed for every new position detected during portfolio sync.
+            The SL price is calculated as entry price minus the configured percentage.
           </p>
           <p>
             <strong>API Credentials</strong> — Optional L2 API keys for placing orders

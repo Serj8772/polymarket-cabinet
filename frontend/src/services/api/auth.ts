@@ -56,3 +56,13 @@ export async function savePrivateKey(body: {
   );
   return data;
 }
+
+export async function saveAutoSL(body: {
+  percent: number | null;
+}): Promise<UserResponse> {
+  const { data } = await apiClient.post<UserResponse>(
+    "/auth/auto-sl",
+    body,
+  );
+  return data;
+}
