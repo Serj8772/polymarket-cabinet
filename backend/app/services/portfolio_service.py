@@ -1,10 +1,14 @@
 """Portfolio service — user positions, P&L calculations, sync."""
 
 import logging
+from datetime import UTC, datetime
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.position import position_crud
+from app.models.order import Order
+from app.models.position import Position
 from app.models.user import User
 from app.schemas.position import PortfolioResponse, PositionResponse
 from app.services.polymarket_client import polymarket_client
@@ -144,12 +148,23 @@ class PortfolioService:
                     "redeemable": bool(raw.get("redeemable", False)),
                 })
 
+        # Snapshot existing token_ids before upsert (for auto-SL detection)
+        existing_token_ids = await position_crud.get_user_token_ids(
+            db, user_id=user.id,
+        )
+
         # Upsert positions from API
         count = await position_crud.upsert_many(
             db,
             user_id=user.id,
             positions_data=positions_data,
         )
+
+        # Auto-SL for new positions
+        synced_token_ids = {p["token_id"] for p in positions_data}
+        new_token_ids = synced_token_ids - existing_token_ids
+        if user.auto_sl_percent and new_token_ids:
+            await self._apply_auto_sl(db, user, new_token_ids)
 
         # Zero out positions that are no longer in the API response
         # (sold, closed, or otherwise removed from Polymarket)
@@ -173,6 +188,73 @@ class PortfolioService:
             wallet[:10],
         )
         return count
+
+
+    async def _apply_auto_sl(
+        self,
+        db: AsyncSession,
+        user: User,
+        new_token_ids: set[str],
+    ) -> None:
+        """Set auto stop-loss for newly detected positions."""
+        pct = float(user.auto_sl_percent)  # type: ignore
+        result = await db.execute(
+            select(Position)
+            .where(Position.user_id == user.id)
+            .where(Position.token_id.in_(new_token_ids))
+            .where(Position.size > 0)
+            .where(Position.stop_loss_price.is_(None))
+        )
+        positions = list(result.scalars().all())
+
+        count = 0
+        now = datetime.now(UTC)
+        for pos in positions:
+            avg = float(pos.avg_price)
+            if avg <= 0:
+                continue
+
+            sl_price = round(avg * (1 - pct / 100), 2)
+            if sl_price <= 0:
+                continue
+
+            pos.stop_loss_price = sl_price
+
+            # Create SL order record
+            synthetic_id = f"sl-{pos.id}"
+            db.add(Order(
+                user_id=user.id,
+                market_id=pos.market_id,
+                token_id=pos.token_id,
+                polymarket_order_id=synthetic_id,
+                side="SELL",
+                outcome=pos.outcome,
+                order_type="STOP_LOSS",
+                size=float(pos.size),
+                price=sl_price,
+                size_filled=0,
+                status="LIVE",
+                market_question=pos.title,
+                position_id=pos.id,
+                placed_at=now,
+            ))
+            count += 1
+
+        if count:
+            await db.commit()
+
+            # Notify WS monitor about new subscriptions
+            try:
+                from app.services.sl_ws_monitor import sl_ws_monitor
+
+                sl_ws_monitor.notify_sl_changed()
+            except Exception:
+                pass
+
+            logger.info(
+                "Auto SL set for %d new positions (-%s%%) for user %s",
+                count, pct, user.wallet_address[:10],
+            )
 
 
 def _parse_float(value) -> float:

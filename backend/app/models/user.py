@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import String, Text
+from sqlalchemy import Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
@@ -54,6 +54,13 @@ class User(Base, TimestampMixin):
         Text,
         nullable=True,
         comment="Fernet-encrypted wallet private key for CLOB order signing",
+    )
+
+    # Trading preferences
+    auto_sl_percent: Mapped[float | None] = mapped_column(
+        Numeric(5, 2),
+        nullable=True,
+        comment="Auto stop-loss percentage below entry price (e.g. 15.0 = -15%)",
     )
 
     @property

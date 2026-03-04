@@ -16,6 +16,7 @@ from app.crud.user import user_crud
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
+    AutoSLRequest,
     LoginRequest,
     NonceResponse,
     PolymarketCredsRequest,
@@ -29,6 +30,17 @@ from app.utils.redis_client import get_redis
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _user_response(user: User) -> UserResponse:
+    """Build UserResponse from User model."""
+    return UserResponse(
+        wallet_address=user.wallet_address,
+        proxy_wallet=user.proxy_wallet,
+        has_polymarket_creds=user.has_polymarket_creds,
+        has_private_key=user.has_private_key,
+        auto_sl_percent=float(user.auto_sl_percent) if user.auto_sl_percent else None,
+    )
 
 NONCE_PREFIX = "pm:nonce:"
 NONCE_TTL = 300  # 5 minutes
@@ -115,12 +127,28 @@ async def get_me(
     current_user: User = Depends(get_current_user),
 ) -> UserResponse:
     """Get current authenticated user info."""
-    return UserResponse(
-        wallet_address=current_user.wallet_address,
-        proxy_wallet=current_user.proxy_wallet,
-        has_polymarket_creds=current_user.has_polymarket_creds,
-        has_private_key=current_user.has_private_key,
-    )
+    return _user_response(current_user)
+
+
+@router.post("/auto-sl", response_model=UserResponse)
+async def set_auto_sl(
+    body: AutoSLRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Set or disable auto stop-loss percentage for new positions.
+
+    When set, every new position detected during portfolio sync will
+    automatically get a stop-loss at entry_price * (1 - percent/100).
+    Pass percent=null to disable.
+    """
+    current_user.auto_sl_percent = body.percent
+    await db.commit()
+    await db.refresh(current_user)
+
+    state = f"{body.percent}%" if body.percent else "disabled"
+    logger.info("Auto SL %s for %s", state, current_user.wallet_address[:10])
+    return _user_response(current_user)
 
 
 @router.post("/polymarket-creds", response_model=UserResponse)
@@ -139,12 +167,7 @@ async def save_polymarket_creds(
     )
 
     logger.info("Polymarket creds saved for %s", current_user.wallet_address[:10])
-    return UserResponse(
-        wallet_address=user.wallet_address,
-        proxy_wallet=user.proxy_wallet,
-        has_polymarket_creds=user.has_polymarket_creds,
-        has_private_key=user.has_private_key,
-    )
+    return _user_response(user)
 
 
 @router.post("/proxy-wallet", response_model=UserResponse)
@@ -166,12 +189,7 @@ async def save_proxy_wallet(
     )
 
     logger.info("Proxy wallet saved for %s: %s", current_user.wallet_address[:10], body.proxy_wallet[:10])
-    return UserResponse(
-        wallet_address=user.wallet_address,
-        proxy_wallet=user.proxy_wallet,
-        has_polymarket_creds=user.has_polymarket_creds,
-        has_private_key=user.has_private_key,
-    )
+    return _user_response(user)
 
 
 @router.post("/private-key", response_model=UserResponse)
@@ -250,9 +268,4 @@ async def save_private_key(
     )
 
     logger.info("Private key saved for %s", current_user.wallet_address[:10])
-    return UserResponse(
-        wallet_address=user.wallet_address,
-        proxy_wallet=user.proxy_wallet,
-        has_polymarket_creds=user.has_polymarket_creds,
-        has_private_key=user.has_private_key,
-    )
+    return _user_response(user)

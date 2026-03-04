@@ -133,6 +133,20 @@ class CRUDPosition(CRUDBase[Position, BaseModel, BaseModel]):
         await db.commit()
         return len(rows)
 
+    async def get_user_token_ids(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+    ) -> set[str]:
+        """Get all token_ids for a user's active positions."""
+        result = await db.execute(
+            select(Position.token_id)
+            .where(Position.user_id == user_id)
+            .where(Position.size > 0)
+        )
+        return {row[0] for row in result.all()}
+
     async def zero_missing_positions(
         self,
         db: AsyncSession,

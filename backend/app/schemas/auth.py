@@ -84,6 +84,17 @@ class PrivateKeyRequest(BaseModel):
     )
 
 
+class AutoSLRequest(BaseModel):
+    """Request to set/disable auto stop-loss percentage."""
+
+    percent: float | None = Field(
+        None,
+        ge=1.0,
+        le=50.0,
+        description="Auto SL percentage below entry (e.g. 15.0 = -15%). Null to disable.",
+    )
+
+
 class UserResponse(BaseModel):
     """User info response."""
 
@@ -93,3 +104,4 @@ class UserResponse(BaseModel):
     proxy_wallet: str | None = None
     has_polymarket_creds: bool
     has_private_key: bool = False
+    auto_sl_percent: float | None = None
