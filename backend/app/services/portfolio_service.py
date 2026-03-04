@@ -164,7 +164,7 @@ class PortfolioService:
         synced_token_ids = {p["token_id"] for p in positions_data}
         new_token_ids = synced_token_ids - existing_token_ids
         if user.auto_sl_percent and new_token_ids:
-            await self._apply_auto_sl(db, user, new_token_ids)
+            await self.apply_auto_sl(db, user, token_ids=new_token_ids)
 
         # Zero out positions that are no longer in the API response
         # (sold, closed, or otherwise removed from Polymarket)
@@ -190,21 +190,31 @@ class PortfolioService:
         return count
 
 
-    async def _apply_auto_sl(
+    async def apply_auto_sl(
         self,
         db: AsyncSession,
         user: User,
-        new_token_ids: set[str],
-    ) -> None:
-        """Set auto stop-loss for newly detected positions."""
+        token_ids: set[str] | None = None,
+    ) -> int:
+        """Set auto stop-loss for positions without one.
+
+        Args:
+            token_ids: If provided, only apply to these token_ids (new positions).
+                       If None, apply to ALL user positions without SL.
+
+        Returns:
+            Number of positions where SL was set.
+        """
         pct = float(user.auto_sl_percent)  # type: ignore
-        result = await db.execute(
+        query = (
             select(Position)
             .where(Position.user_id == user.id)
-            .where(Position.token_id.in_(new_token_ids))
             .where(Position.size > 0)
             .where(Position.stop_loss_price.is_(None))
         )
+        if token_ids is not None:
+            query = query.where(Position.token_id.in_(token_ids))
+        result = await db.execute(query)
         positions = list(result.scalars().all())
 
         count = 0
@@ -252,9 +262,11 @@ class PortfolioService:
                 pass
 
             logger.info(
-                "Auto SL set for %d new positions (-%s%%) for user %s",
+                "Auto SL set for %d positions (-%s%%) for user %s",
                 count, pct, user.wallet_address[:10],
             )
+
+        return count
 
 
 def _parse_float(value) -> float:

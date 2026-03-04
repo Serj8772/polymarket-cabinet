@@ -140,11 +140,23 @@ async def set_auto_sl(
 
     When set, every new position detected during portfolio sync will
     automatically get a stop-loss at entry_price * (1 - percent/100).
+    When enabled, also applies to existing positions without a SL.
     Pass percent=null to disable.
     """
     current_user.auto_sl_percent = body.percent
     await db.commit()
     await db.refresh(current_user)
+
+    # When enabling, apply SL to all existing positions without one
+    if body.percent:
+        from app.services.portfolio_service import portfolio_service
+
+        applied = await portfolio_service.apply_auto_sl(db, current_user)
+        if applied:
+            logger.info(
+                "Auto SL applied to %d existing positions for %s",
+                applied, current_user.wallet_address[:10],
+            )
 
     state = f"{body.percent}%" if body.percent else "disabled"
     logger.info("Auto SL %s for %s", state, current_user.wallet_address[:10])
