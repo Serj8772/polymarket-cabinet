@@ -179,7 +179,7 @@ class MarketService:
             now = datetime.now(UTC)
 
             for m in raw_markets:
-                market_id = m.get("condition_id") or m.get("id")
+                market_id = m.get("conditionId") or m.get("condition_id") or m.get("id")
                 question = m.get("question")
                 if not market_id or not question:
                     continue
@@ -190,10 +190,10 @@ class MarketService:
                 markets_data.append({
                     "id": str(market_id),
                     "question": question,
-                    "slug": m.get("market_slug") or m.get("slug"),
-                    "category": m.get("group_item_title") or m.get("category"),
+                    "slug": m.get("slug") or m.get("market_slug"),
+                    "category": m.get("groupItemTitle") or m.get("group_item_title") or m.get("category"),
                     "event_slug": self._extract_event_slug(m),
-                    "end_date": m.get("end_date_iso"),
+                    "end_date": m.get("endDateIso") or m.get("end_date_iso"),
                     "active": m.get("active", True),
                     "closed": m.get("closed", False),
                     "tokens": tokens,
@@ -238,7 +238,7 @@ class MarketService:
         tokens = []
 
         # Gamma API provides clob_token_ids (comma-separated) and outcomes
-        clob_ids = market_data.get("clob_token_ids")
+        clob_ids = market_data.get("clobTokenIds") or market_data.get("clob_token_ids")
         outcomes_str = market_data.get("outcomes")
 
         if clob_ids and outcomes_str:
