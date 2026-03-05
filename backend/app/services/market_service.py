@@ -165,6 +165,7 @@ class MarketService:
             try:
                 raw_markets = await polymarket_client.get_markets(
                     limit=page_size, offset=offset,
+                    active=True, closed=False,
                 )
             except Exception as e:
                 logger.error("Failed to fetch markets at offset %d: %s", offset, e)
@@ -191,7 +192,7 @@ class MarketService:
                     "question": question,
                     "slug": m.get("market_slug") or m.get("slug"),
                     "category": m.get("group_item_title") or m.get("category"),
-                    "event_slug": m.get("event_slug"),
+                    "event_slug": self._extract_event_slug(m),
                     "end_date": m.get("end_date_iso"),
                     "active": m.get("active", True),
                     "closed": m.get("closed", False),
@@ -222,6 +223,14 @@ class MarketService:
                 logger.info("Invalidated %d cache keys", len(keys))
 
         return total_synced
+
+    @staticmethod
+    def _extract_event_slug(market_data: dict) -> str | None:
+        """Extract event slug from Gamma API events array."""
+        events = market_data.get("events")
+        if events and isinstance(events, list) and len(events) > 0:
+            return events[0].get("slug")
+        return None
 
     @staticmethod
     def _parse_tokens(market_data: dict) -> list[dict] | None:

@@ -21,6 +21,7 @@ export function MarketsPage() {
   const browseQuery = useMarkets({
     category,
     active: showActive,
+    closed: showActive === true ? false : undefined,
     page,
     page_size: pageSize,
   });
