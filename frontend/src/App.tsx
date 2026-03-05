@@ -12,6 +12,7 @@ import { MarketsPage } from "@/pages/MarketsPage";
 import { PortfolioPage } from "@/pages/PortfolioPage";
 import { OrdersPage } from "@/pages/OrdersPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { StrategiesPage } from "@/pages/StrategiesPage";
 import { MarketDetailPage } from "@/pages/MarketDetailPage";
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ export function App() {
               <Route path="/markets/:marketId" element={<MarketDetailPage />} />
               <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/strategies" element={<StrategiesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

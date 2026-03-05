@@ -191,6 +191,7 @@ class MarketService:
                     "question": question,
                     "slug": m.get("market_slug") or m.get("slug"),
                     "category": m.get("group_item_title") or m.get("category"),
+                    "event_slug": m.get("event_slug"),
                     "end_date": m.get("end_date_iso"),
                     "active": m.get("active", True),
                     "closed": m.get("closed", False),

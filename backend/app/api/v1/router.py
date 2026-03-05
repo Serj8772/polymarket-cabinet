@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, markets, orders, portfolio, trading
+from app.api.v1.endpoints import auth, markets, orders, portfolio, strategies, trading
 
 api_router = APIRouter()
 
@@ -11,3 +11,4 @@ api_router.include_router(markets.router)
 api_router.include_router(portfolio.router)
 api_router.include_router(orders.router)
 api_router.include_router(trading.router)
+api_router.include_router(strategies.router)

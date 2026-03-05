@@ -117,6 +117,7 @@ class CRUDMarket(CRUDBase[Market, dict, dict]):
                 "liquidity": stmt.excluded.liquidity,
                 "description": stmt.excluded.description,
                 "image": stmt.excluded.image,
+                "event_slug": stmt.excluded.event_slug,
                 "synced_at": stmt.excluded.synced_at,
                 "updated_at": func.now(),
             },
