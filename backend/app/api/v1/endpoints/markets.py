@@ -56,8 +56,37 @@ async def sync_markets(
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Manually trigger market sync from Gamma API."""
-    count = await market_service.sync_markets_from_gamma(db)
-    return {"synced": count}
+    try:
+        count = await market_service.sync_markets_from_gamma(db)
+        return {"synced": count}
+    except Exception as e:
+        logger.exception("Manual sync failed")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/debug/gamma")
+async def debug_gamma() -> dict:
+    """Debug: fetch 1 market from Gamma and show parsed fields."""
+    from app.services.polymarket_client import polymarket_client
+
+    raw = await polymarket_client.get_markets(limit=1, active=True, closed=False)
+    if not raw:
+        return {"error": "no markets from gamma"}
+    m = raw[0]
+    tokens = market_service._parse_tokens(m)
+    return {
+        "id": m.get("id"),
+        "conditionId": m.get("conditionId"),
+        "question": m.get("question", "")[:80],
+        "clobTokenIds": m.get("clobTokenIds"),
+        "clob_token_ids": m.get("clob_token_ids"),
+        "outcomes": m.get("outcomes"),
+        "outcomePrices": m.get("outcomePrices"),
+        "parsed_tokens": tokens,
+        "event_slug": market_service._extract_event_slug(m),
+        "groupItemTitle": m.get("groupItemTitle"),
+        "endDateIso": m.get("endDateIso"),
+    }
 
 
 @router.get("/{market_id}", response_model=MarketDetailResponse)
