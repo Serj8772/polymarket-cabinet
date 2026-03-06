@@ -193,7 +193,9 @@ class MarketService:
                     "slug": m.get("slug") or m.get("market_slug"),
                     "category": m.get("groupItemTitle") or m.get("group_item_title") or m.get("category"),
                     "event_slug": self._extract_event_slug(m),
-                    "end_date": m.get("endDateIso") or m.get("end_date_iso"),
+                    "end_date": self._parse_date(
+                        m.get("endDateIso") or m.get("end_date_iso")
+                    ),
                     "active": m.get("active", True),
                     "closed": m.get("closed", False),
                     "tokens": tokens,
@@ -223,6 +225,21 @@ class MarketService:
                 logger.info("Invalidated %d cache keys", len(keys))
 
         return total_synced
+
+    @staticmethod
+    def _parse_date(value: Any) -> datetime | None:
+        """Parse date string from Gamma API into datetime."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        s = str(value).strip()
+        for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(s, fmt).replace(tzinfo=UTC)
+            except ValueError:
+                continue
+        return None
 
     @staticmethod
     def _extract_event_slug(market_data: dict) -> str | None:
