@@ -51,6 +51,15 @@ async def search_markets(
     )
 
 
+@router.post("/sync")
+async def sync_markets(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Manually trigger market sync from Gamma API."""
+    count = await market_service.sync_markets_from_gamma(db)
+    return {"synced": count}
+
+
 @router.get("/{market_id}", response_model=MarketDetailResponse)
 async def get_market(
     market_id: str,
