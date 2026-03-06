@@ -47,7 +47,7 @@ export function MarketsPage() {
     <div>
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           Markets
         </h2>
         <div className="w-full sm:w-80">
@@ -69,7 +69,7 @@ export function MarketsPage() {
                   onClick={() => handleCategoryChange(cat)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-[var(--accent-blue)] text-white"
+                      ? "bg-[var(--accent-primary)] text-white"
                       : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
@@ -95,7 +95,7 @@ export function MarketsPage() {
               onClick={() => setShowActive(undefined)}
               className={`rounded-md px-3 py-1 text-xs transition-colors ${
                 showActive === undefined
-                  ? "bg-[var(--accent-blue)] text-white"
+                  ? "bg-[var(--accent-primary)] text-white"
                   : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
               }`}
             >

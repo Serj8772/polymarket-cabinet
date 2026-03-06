@@ -10,18 +10,16 @@ export function Header() {
     : "";
 
   return (
-    <header className="h-14 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] flex items-center justify-between px-6">
-      <div />
-
-      <div className="flex items-center gap-4">
+    <header className="h-14 bg-[var(--bg-secondary)]/50 backdrop-blur-sm flex items-center justify-end px-6" style={{ boxShadow: '0 1px 0 var(--border-color)' }}>
+      <div className="flex items-center gap-3">
         {isAuthenticated && wallet && (
           <>
-            <span className="text-sm text-[var(--text-secondary)]">
+            <span className="inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-3 py-1 text-xs font-mono text-[var(--text-secondary)]">
               {shortAddress}
             </span>
             <button
               onClick={logout}
-              className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-red)] transition-colors"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-red)] transition-colors rounded-lg px-2.5 py-1.5 hover:bg-[var(--accent-red)]/8"
             >
               Disconnect
             </button>

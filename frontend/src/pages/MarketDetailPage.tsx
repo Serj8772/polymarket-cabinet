@@ -80,7 +80,7 @@ export function MarketDetailPage() {
         )}
         <div>
           {market.category && (
-            <span className="mb-1 inline-block rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">
+            <span className="mb-1 inline-block rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
               {market.category}
             </span>
           )}
@@ -121,7 +121,7 @@ export function MarketDetailPage() {
 
       {/* Description */}
       {market.description && (
-        <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+        <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
           <h3 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">
             Description
           </h3>
@@ -133,7 +133,7 @@ export function MarketDetailPage() {
 
       {/* Tokens info */}
       {market.tokens && market.tokens.length > 0 && (
-        <div className="mt-6 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+        <div className="mt-6 rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
           <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
             Tokens
           </h3>
@@ -190,7 +190,7 @@ function PriceCard({
 
   return (
     <div
-      className={`rounded-lg border border-[var(--border-color)] p-4 ${bgClass}`}
+      className={`rounded-xl border border-[var(--border-color)]/60 p-4 ${bgClass}`}
     >
       <div className="mb-1 text-xs font-medium text-[var(--text-secondary)]">
         {label}

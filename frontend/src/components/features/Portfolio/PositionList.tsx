@@ -38,7 +38,7 @@ export function PositionList({ positions, isLoading }: PositionListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {positions.map((position) => (
         <PositionCard key={position.id} position={position} />
       ))}
@@ -48,11 +48,11 @@ export function PositionList({ positions, isLoading }: PositionListProps) {
 
 function SkeletonGrid() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4"
+          className="animate-pulse rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4"
         >
           <div className="mb-3 flex items-start gap-3">
             <div className="h-10 w-10 shrink-0 rounded-md bg-[var(--bg-tertiary)]" />

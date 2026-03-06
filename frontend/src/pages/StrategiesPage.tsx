@@ -26,12 +26,12 @@ export function StrategiesPage() {
 
   return (
     <div>
-      <h2 className="mb-6 text-2xl font-bold text-[var(--text-primary)]">
+      <h2 className="mb-6 text-xl font-semibold text-[var(--text-primary)]">
         Strategies
       </h2>
 
       {/* Arbitrage Scanner */}
-      <div className="mb-6 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <div className="mb-6 rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <h3 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
           Arbitrage Scanner
         </h3>
@@ -52,7 +52,7 @@ export function StrategiesPage() {
               max={50}
               value={tailThreshold}
               onChange={(e) => setTailThreshold(Number(e.target.value))}
-              className="w-24 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
+              className="w-24 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
             />
           </div>
           <div>
@@ -65,13 +65,13 @@ export function StrategiesPage() {
               max={20}
               value={minBrackets}
               onChange={(e) => setMinBrackets(Number(e.target.value))}
-              className="w-24 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
+              className="w-24 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
             />
           </div>
           <button
             onClick={handleScan}
             disabled={isLoading}
-            className="rounded bg-[var(--accent-blue)] px-5 py-1.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent-primary)] px-5 py-1.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {isLoading ? "Scanning..." : "Scan Markets"}
           </button>
@@ -95,7 +95,7 @@ export function StrategiesPage() {
 
       {/* Results table */}
       {data && data.opportunities.length > 0 && (
-        <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
+        <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)]">
           {/* Header */}
           <div className="grid grid-cols-[1fr_80px_80px_90px_80px_90px] gap-2 border-b border-[var(--border-color)] px-4 py-2.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Event</span>
@@ -124,8 +124,10 @@ export function StrategiesPage() {
 
       {/* Empty state */}
       {data && data.opportunities.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] py-12">
-          <span className="mb-3 text-3xl">🔍</span>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] py-12">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-tertiary)]">
+            <span className="text-lg text-[var(--text-secondary)]">—</span>
+          </div>
           <p className="text-sm text-[var(--text-secondary)]">
             No arbitrage opportunities found. Try adjusting the threshold.
           </p>

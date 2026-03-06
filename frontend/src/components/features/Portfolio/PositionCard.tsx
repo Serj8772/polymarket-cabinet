@@ -95,7 +95,7 @@ export function PositionCard({ position }: PositionCardProps) {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4 transition-all hover:border-[var(--accent-blue)]">
+    <div className="flex h-full flex-col rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4 transition-all hover:border-[var(--accent-primary)]/40">
       {/* Header */}
       <div className="mb-3 flex items-start gap-3">
         {position.market_image && (
@@ -135,19 +135,19 @@ export function PositionCard({ position }: PositionCardProps) {
 
       {/* Values grid */}
       <div className="mb-3 grid grid-cols-3 gap-2 text-xs">
-        <div className="rounded-md bg-[var(--bg-tertiary)] px-2 py-1.5">
+        <div className="rounded-md bg-[var(--bg-tertiary)]/80 px-2 py-1.5">
           <span className="text-[var(--text-secondary)]">Shares</span>
           <div className="font-medium text-[var(--text-primary)]">
             {position.size.toFixed(2)}
           </div>
         </div>
-        <div className="rounded-md bg-[var(--bg-tertiary)] px-2 py-1.5">
+        <div className="rounded-md bg-[var(--bg-tertiary)]/80 px-2 py-1.5">
           <span className="text-[var(--text-secondary)]">Buy Price</span>
           <div className="font-medium text-[var(--text-primary)]">
             {(position.avg_price * 100).toFixed(1)}¢
           </div>
         </div>
-        <div className="rounded-md bg-[var(--bg-tertiary)] px-2 py-1.5">
+        <div className="rounded-md bg-[var(--bg-tertiary)]/80 px-2 py-1.5">
           <span className="text-[var(--text-secondary)]">Now</span>
           <div className={`font-medium ${
             position.current_price != null && position.current_price > position.avg_price
@@ -161,13 +161,13 @@ export function PositionCard({ position }: PositionCardProps) {
               : "—"}
           </div>
         </div>
-        <div className="rounded-md bg-[var(--bg-tertiary)] px-2 py-1.5">
+        <div className="rounded-md bg-[var(--bg-tertiary)]/80 px-2 py-1.5">
           <span className="text-[var(--text-secondary)]">Cost</span>
           <div className="font-medium text-[var(--text-primary)]">
             {formatUSD(position.cost_basis)}
           </div>
         </div>
-        <div className="col-span-2 rounded-md bg-[var(--bg-tertiary)] px-2 py-1.5">
+        <div className="col-span-2 rounded-md bg-[var(--bg-tertiary)]/80 px-2 py-1.5">
           <span className="text-[var(--text-secondary)]">Value</span>
           <div className="font-medium text-[var(--text-primary)]">
             {formatUSD(position.current_value)}

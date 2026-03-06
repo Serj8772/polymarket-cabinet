@@ -20,10 +20,10 @@ export function PortfolioPage() {
     if (isAuthError) {
       return (
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-[var(--text-primary)]">
+          <h2 className="mb-6 text-xl font-semibold text-[var(--text-primary)]">
             Portfolio
           </h2>
-          <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] py-16">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] py-16">
             <svg
               className="mb-4 h-16 w-16 text-[var(--accent-blue)] opacity-60"
               fill="none"
@@ -45,7 +45,7 @@ export function PortfolioPage() {
             </p>
             <Link
               to="/"
-              className="rounded-md bg-[var(--accent-blue)] px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              className="rounded-lg bg-[var(--accent-primary)] px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
             >
               Reconnect Wallet
             </Link>
@@ -60,7 +60,7 @@ export function PortfolioPage() {
 
   return (
     <div>
-      <h2 className="mb-6 text-2xl font-bold text-[var(--text-primary)]">
+      <h2 className="mb-6 text-xl font-semibold text-[var(--text-primary)]">
         Portfolio
       </h2>
 
@@ -75,8 +75,7 @@ export function PortfolioPage() {
 
       {/* Setup prompt when no positions */}
       {!isLoading && !hasPositions && !proxyWallet && (
-        <div className="mb-6 flex flex-col items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] py-12">
-          <span className="mb-3 text-4xl">🟣</span>
+        <div className="mb-6 flex flex-col items-center justify-center rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] py-12">
           <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
             Set up your Polymarket Wallet
           </h3>
@@ -86,7 +85,7 @@ export function PortfolioPage() {
           </p>
           <Link
             to="/settings"
-            className="rounded-md bg-[var(--accent-blue)] px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+            className="rounded-lg bg-[var(--accent-primary)] px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
           >
             Go to Settings
           </Link>

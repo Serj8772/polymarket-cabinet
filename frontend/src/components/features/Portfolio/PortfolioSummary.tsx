@@ -26,7 +26,7 @@ export function PortfolioSummary({
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
       {/* Portfolio Value (positions + cash) */}
-      <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
         <div className="text-xs text-[var(--text-secondary)]">Portfolio Value</div>
         <div className="mt-1 text-2xl font-bold text-[var(--text-primary)]">
           {formatUSD(totalPortfolioValue)}
@@ -37,7 +37,7 @@ export function PortfolioSummary({
       </div>
 
       {/* Cash Balance */}
-      <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
         <div className="text-xs text-[var(--text-secondary)]">Cash Balance</div>
         <div className="mt-1 text-2xl font-bold text-[var(--text-primary)]">
           {formatUSD(portfolio.cash_balance)}
@@ -46,7 +46,7 @@ export function PortfolioSummary({
       </div>
 
       {/* Unrealized P&L */}
-      <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
         <div className="text-xs text-[var(--text-secondary)]">
           Unrealized P&L
         </div>
@@ -73,7 +73,7 @@ export function PortfolioSummary({
       </div>
 
       {/* Realized P&L */}
-      <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
         <div className="text-xs text-[var(--text-secondary)]">Realized P&L</div>
         <div
           className={`mt-1 text-2xl font-bold ${
@@ -88,7 +88,7 @@ export function PortfolioSummary({
       </div>
 
       {/* Positions count + Sync */}
-      <div className="flex flex-col rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+      <div className="flex flex-col rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
         <div className="text-xs text-[var(--text-secondary)]">Positions</div>
         <div className="mt-1 text-2xl font-bold text-[var(--text-primary)]">
           {portfolio.positions_count}
@@ -96,7 +96,7 @@ export function PortfolioSummary({
         <button
           onClick={onSync}
           disabled={isSyncing}
-          className="mt-auto rounded-md bg-[var(--accent-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+          className="mt-auto rounded-lg bg-[var(--accent-primary)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {isSyncing ? "Syncing..." : "Sync from Polymarket"}
         </button>

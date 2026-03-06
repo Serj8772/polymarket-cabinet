@@ -45,7 +45,7 @@ export function OrderFilters({
             onClick={() => onStatusChange(value)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               isActive
-                ? "bg-[var(--accent-blue)] text-white"
+                ? "bg-[var(--accent-primary)] text-white"
                 : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >

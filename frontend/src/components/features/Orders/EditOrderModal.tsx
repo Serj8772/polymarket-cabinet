@@ -55,7 +55,7 @@ export function EditOrderModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div
-        className="mx-4 w-full max-w-sm rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-2xl"
+        className="mx-4 w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-6 shadow-2xl"
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
@@ -65,7 +65,7 @@ export function EditOrderModal({
           </h3>
           <button
             onClick={onClose}
-            className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+            className="rounded-lg p-1 text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -74,7 +74,7 @@ export function EditOrderModal({
         </div>
 
         {/* Market info */}
-        <div className="mb-4 rounded-lg bg-[var(--bg-secondary)] p-3">
+        <div className="mb-4 rounded-lg bg-[var(--bg-tertiary)] p-3">
           <p className="text-[12px] text-[var(--text-secondary)]">
             {order.market_question || order.market_id.slice(0, 20) + "..."}
           </p>
@@ -114,7 +114,7 @@ export function EditOrderModal({
             }}
             autoFocus
             disabled={isPending}
-            className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent-blue)] focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent-primary)] focus:outline-none disabled:opacity-50"
             placeholder="e.g. 85.0"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-secondary)]">
@@ -135,14 +135,14 @@ export function EditOrderModal({
           <button
             onClick={onClose}
             disabled={isPending}
-            className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:opacity-50"
+            className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex-1 rounded-lg bg-[var(--accent-blue)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+            className="flex-1 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {isPending ? (
               <span className="flex items-center justify-center gap-2">

@@ -58,10 +58,10 @@ export function OrdersPage() {
 
     return (
       <div>
-        <h2 className="mb-6 text-2xl font-bold text-[var(--text-primary)]">
+        <h2 className="mb-6 text-xl font-semibold text-[var(--text-primary)]">
           Orders
         </h2>
-        <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-8 text-center">
+        <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-8 text-center">
           <p className="text-[var(--text-secondary)]">{errMsg}</p>
         </div>
       </div>
@@ -72,13 +72,13 @@ export function OrdersPage() {
     <div>
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           Orders
         </h2>
         <button
           onClick={() => syncMutation.mutate()}
           disabled={syncMutation.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {syncMutation.isPending ? (
             <>

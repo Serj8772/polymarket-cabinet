@@ -79,7 +79,7 @@ export function OrderTable({
   return (
     <div>
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--border-color)]/60">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">
@@ -132,7 +132,7 @@ export function OrderTable({
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
-            className="rounded-md border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             ← Prev
           </button>
@@ -142,7 +142,7 @@ export function OrderTable({
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
-            className="rounded-md border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next →
           </button>
@@ -186,7 +186,7 @@ function OrderRow({
       {/* Side */}
       <td className="px-3 py-2.5">
         <span
-          className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+          className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
             isBuy
               ? "bg-[color-mix(in_srgb,var(--accent-green)_15%,transparent)] text-[var(--accent-green)]"
               : "bg-[color-mix(in_srgb,var(--accent-red)_15%,transparent)] text-[var(--accent-red)]"
@@ -298,7 +298,7 @@ function OrderTypeBadge({ orderType }: { orderType: string }) {
   }
 
   return (
-    <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${classes}`}>
+    <span className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${classes}`}>
       {label}
     </span>
   );
@@ -324,7 +324,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${classes}`}>
+    <span className={`inline-block rounded-full px-1.5 py-0.5 text-[11px] font-medium ${classes}`}>
       {status}
     </span>
   );
@@ -333,7 +333,7 @@ function StatusBadge({ status }: { status: string }) {
 function SkeletonTable() {
   const cols = ["Market", "Type", "Side", "Price", "Size", "Filled", "Status", "Date", "Actions"];
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--border-color)]">
+    <div className="overflow-x-auto rounded-xl border border-[var(--border-color)]/60">
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)]">

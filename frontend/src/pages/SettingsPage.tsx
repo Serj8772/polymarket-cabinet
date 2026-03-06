@@ -154,12 +154,12 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+      <h2 className="text-xl font-semibold text-[var(--text-primary)]">
         Settings
       </h2>
 
       {/* Wallet Info */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             Wallet
@@ -169,8 +169,8 @@ export function SettingsPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-tertiary)] text-lg">
-            🦊
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-primary)]/15 text-sm font-medium text-[var(--accent-primary)]">
+            MM
           </div>
           <div>
             <p className="font-mono text-sm text-[var(--text-primary)]">
@@ -184,7 +184,7 @@ export function SettingsPage() {
       </section>
 
       {/* Polymarket Wallet Address */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             Polymarket Wallet
@@ -203,8 +203,8 @@ export function SettingsPage() {
         {proxyWallet ? (
           <div className="mb-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-tertiary)] text-lg">
-                🟣
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-primary)]/15 text-sm font-medium text-[var(--accent-primary)]">
+                PM
               </div>
               <div>
                 <p className="font-mono text-sm text-[var(--text-primary)]">
@@ -250,7 +250,7 @@ export function SettingsPage() {
               value={proxyInput}
               onChange={(e) => setProxyInput(e.target.value)}
               placeholder="0x..."
-              className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
               autoComplete="off"
             />
             {proxyInput.trim() !== "" && !isValidAddress && (
@@ -263,7 +263,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={!canSubmitProxy}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {savingProxy ? (
               <>
@@ -296,7 +296,7 @@ export function SettingsPage() {
       </section>
 
       {/* Trading Key (Private Key) */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             Trading Key
@@ -332,7 +332,7 @@ export function SettingsPage() {
               value={pkInput}
               onChange={(e) => setPkInput(e.target.value)}
               placeholder="64 hex characters (with or without 0x prefix)"
-              className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
               autoComplete="off"
             />
             {pkInput.trim() !== "" && !isValidPk && (
@@ -345,7 +345,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={!canSubmitPk}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {savingPk ? (
               <>
@@ -378,7 +378,7 @@ export function SettingsPage() {
       </section>
 
       {/* Auto Stop-Loss */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             Auto Stop-Loss
@@ -424,7 +424,7 @@ export function SettingsPage() {
                   step="0.5"
                   value={slPercent}
                   onChange={(e) => setSLPercent(e.target.value)}
-                  className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 pr-8 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 pr-8 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
                   %
@@ -439,7 +439,7 @@ export function SettingsPage() {
               type="button"
               disabled={savingSL}
               onClick={handleSaveSLPercent}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {savingSL ? (
                 <>
@@ -473,7 +473,7 @@ export function SettingsPage() {
       </section>
 
       {/* Polymarket API Credentials */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             Polymarket API Credentials
@@ -510,7 +510,7 @@ export function SettingsPage() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Your Polymarket API key"
-              className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
               autoComplete="off"
             />
           </div>
@@ -529,7 +529,7 @@ export function SettingsPage() {
               value={apiSecret}
               onChange={(e) => setApiSecret(e.target.value)}
               placeholder="Base64-encoded secret"
-              className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
               autoComplete="off"
             />
           </div>
@@ -548,7 +548,7 @@ export function SettingsPage() {
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
               placeholder="API passphrase"
-              className="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]"
               autoComplete="off"
             />
           </div>
@@ -557,7 +557,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-blue)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -590,7 +590,7 @@ export function SettingsPage() {
       </section>
 
       {/* Info Note */}
-      <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+      <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-5">
         <h3 className="mb-2 text-base font-semibold text-[var(--text-primary)]">
           How it works
         </h3>

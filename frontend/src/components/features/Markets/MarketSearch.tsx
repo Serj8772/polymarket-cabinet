@@ -59,7 +59,7 @@ export function MarketSearch({
         value={localValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-blue)]"
+        className="w-full rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent-primary)]/60 focus:ring-1 focus:ring-[var(--accent-primary)]/20"
       />
       {localValue && (
         <button

@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --accent-green: #3fb950;
-  --accent-red: #f85149;
-  --accent-blue: #58a6ff;
-  --accent-orange: #d29922;
-  --border-color: #30363d;
+  /* Claude Dark — warm, soft dark palette */
+  --bg-primary: #1a1a1f;
+  --bg-secondary: #242429;
+  --bg-tertiary: #2e2e35;
+  --bg-elevated: #2a2a30;
+  --text-primary: #e8e8ed;
+  --text-secondary: #9d9da5;
+  --accent-primary: #c47b5a;
+  --accent-green: #5cb98a;
+  --accent-red: #e07070;
+  --accent-blue: #7aabe0;
+  --accent-orange: #dba255;
+  --border-color: #333339;
 }
 
 * {
@@ -20,13 +23,43 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
+    "Segoe UI", Helvetica, Arial, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 150ms ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }

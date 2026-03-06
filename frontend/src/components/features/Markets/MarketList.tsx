@@ -51,7 +51,7 @@ export function MarketList({
   return (
     <div>
       {/* Grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {markets.map((market) => (
           <MarketCard key={market.id} market={market} />
         ))}
@@ -101,7 +101,7 @@ function PaginationButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
+      className="rounded-lg border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>
@@ -110,11 +110,11 @@ function PaginationButton({
 
 function SkeletonGrid() {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-3"
+          className="animate-pulse rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4"
         >
           <div className="mb-2 flex items-start gap-2">
             <div className="h-8 w-8 shrink-0 rounded bg-[var(--bg-tertiary)]" />

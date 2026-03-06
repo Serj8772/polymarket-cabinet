@@ -35,7 +35,7 @@ export function MarketCard({ market }: MarketCardProps) {
   return (
     <Link
       to={`/markets/${market.id}`}
-      className="flex h-full flex-col rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-3 transition-all hover:border-[var(--accent-blue)] hover:shadow-lg"
+      className="flex h-full flex-col rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4 transition-all hover:border-[var(--accent-primary)]/40 hover:shadow-lg hover:shadow-black/20"
     >
       {/* Header: image + category + question */}
       <div className="mb-2 flex items-start gap-2">

@@ -46,7 +46,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           Dashboard
         </h2>
         <span className="font-mono text-sm text-[var(--text-secondary)]">
@@ -56,7 +56,7 @@ export function DashboardPage() {
 
       {/* CTA Banner — no proxy wallet */}
       {!proxyWallet && (
-        <div className="flex items-center justify-between rounded-lg border border-[color-mix(in_srgb,var(--accent-orange)_30%,var(--border-color))] bg-[color-mix(in_srgb,var(--accent-orange)_8%,var(--bg-secondary))] p-4">
+        <div className="flex items-center justify-between rounded-xl border border-[var(--accent-orange)]/20 bg-[color-mix(in_srgb,var(--accent-orange)_8%,var(--bg-secondary))] p-4">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🟣</span>
             <div>
@@ -71,7 +71,7 @@ export function DashboardPage() {
           </div>
           <Link
             to="/settings"
-            className="shrink-0 rounded-lg bg-[var(--accent-blue)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+            className="shrink-0 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
           >
             Go to Settings
           </Link>
@@ -90,7 +90,6 @@ export function DashboardPage() {
               : null
           }
           isLoading={isLoading}
-          icon="💰"
         />
         <StatCard
           label="Cash Balance"
@@ -98,7 +97,6 @@ export function DashboardPage() {
             portfolioData ? formatCurrency(portfolioData.cash_balance) : null
           }
           isLoading={isLoading}
-          icon="💵"
         />
         <StatCard
           label="Unrealized P&L"
@@ -118,7 +116,6 @@ export function DashboardPage() {
               : undefined
           }
           isLoading={isLoading}
-          icon="📈"
         />
         <StatCard
           label="Active Positions"
@@ -126,20 +123,18 @@ export function DashboardPage() {
             portfolioData ? String(portfolioData.positions_count) : null
           }
           isLoading={isLoading}
-          icon="💼"
         />
         <StatCard
           label="Live Orders"
           value={ordersData ? String(ordersData.total_live) : null}
           isLoading={isLoading}
-          icon="📋"
         />
       </div>
 
       {/* Two-column: Recent Positions + Recent Orders */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* Recent Positions */}
-        <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+        <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">
               Recent Positions
@@ -206,7 +201,7 @@ export function DashboardPage() {
         </section>
 
         {/* Recent Orders */}
-        <section className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+        <section className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">
               Recent Orders
@@ -291,22 +286,17 @@ function StatCard({
   value,
   valueColor,
   isLoading,
-  icon,
 }: {
   label: string;
   value: string | null;
   valueColor?: string;
   isLoading: boolean;
-  icon: string;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
-        <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-          {label}
-        </p>
-      </div>
+    <div className="rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
+        {label}
+      </p>
       {isLoading || value === null ? (
         <div className="h-7 w-28 animate-pulse rounded bg-[var(--bg-tertiary)]" />
       ) : (
@@ -340,7 +330,7 @@ function OrderStatusBadge({ status }: { status: string }) {
   }
   return (
     <span
-      className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${classes}`}
+      className={`inline-block rounded-full px-1.5 py-0.5 text-[11px] font-medium ${classes}`}
     >
       {status}
     </span>
