@@ -20,12 +20,18 @@ router = APIRouter(prefix="/strategies", tags=["strategies"])
 async def scan_arbitrage(
     tail_threshold: float = Query(0.10, ge=0.01, le=0.50, description="Max YES price for tail"),
     min_brackets: int = Query(3, ge=2, le=20, description="Min brackets per event"),
+    min_volume: float = Query(0, ge=0, description="Min volume per market"),
+    max_days: int | None = Query(None, ge=1, le=365, description="Expiration within N days"),
     _current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ArbitrageScanResponse:
     """Scan multi-bracket events for tail-collecting arbitrage opportunities."""
     opportunities = await arbitrage_service.scan_opportunities(
-        db, tail_threshold=tail_threshold, min_brackets=min_brackets,
+        db,
+        tail_threshold=tail_threshold,
+        min_brackets=min_brackets,
+        min_volume=min_volume,
+        max_days=max_days,
     )
 
     return ArbitrageScanResponse(
@@ -51,6 +57,8 @@ async def scan_arbitrage(
                 overround=opp.overround,
                 tail_count=opp.tail_count,
                 best_tail_profit=opp.best_tail_profit,
+                volume=opp.volume,
+                end_date=opp.end_date.isoformat() if opp.end_date else None,
             )
             for opp in opportunities
         ],

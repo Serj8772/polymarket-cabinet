@@ -20,6 +20,8 @@ export interface ArbitrageOpportunity {
   overround: number;
   tail_count: number;
   best_tail_profit: number;
+  volume: number;
+  end_date: string | null;
 }
 
 export interface ArbitrageScanResponse {
@@ -31,4 +33,6 @@ export interface ArbitrageScanResponse {
 export interface ArbitrageScanParams {
   tail_threshold?: number;
   min_brackets?: number;
+  min_volume?: number;
+  max_days?: number;
 }

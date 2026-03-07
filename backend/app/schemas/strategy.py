@@ -27,6 +27,8 @@ class ArbitrageOpportunityResponse(BaseModel):
     overround: float = Field(description="sum_yes - 1.0")
     tail_count: int
     best_tail_profit: float
+    volume: float = Field(default=0.0, description="Sum of all brackets' volumes")
+    end_date: str | None = Field(default=None, description="Earliest expiration (ISO)")
 
 
 class ArbitrageScanResponse(BaseModel):
