@@ -86,7 +86,7 @@ export function Sidebar() {
             to={item.to}
             className={({ isActive }) =>
               clsx(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all mb-0.5",
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all mb-1",
                 isActive
                   ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]",

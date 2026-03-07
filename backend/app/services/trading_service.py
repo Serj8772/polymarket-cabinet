@@ -152,6 +152,29 @@ class TradingService:
 
         logger.info("Market sell (FOK) placed: order_id=%s", order_id)
 
+        # Cancel associated SL order if exists
+        synthetic_sl_id = f"sl-{position.id}"
+        sl_order = await order_crud.get_by_synthetic_id(
+            db, user_id=user.id, polymarket_order_id=synthetic_sl_id,
+        )
+        if sl_order and sl_order.status == "LIVE":
+            sl_order.status = "CANCELLED"
+            position.stop_loss_price = None
+            logger.info("Cancelled SL order %s after manual sell", synthetic_sl_id)
+
+        # Cancel associated TP order on CLOB if exists
+        if position.tp_order_id:
+            try:
+                client.cancel(position.tp_order_id)
+                logger.info("Cancelled TP CLOB order %s after manual sell", position.tp_order_id)
+            except Exception as e:
+                logger.warning("Failed to cancel TP CLOB order after sell: %s", e)
+            position.tp_order_id = None
+        if position.take_profit_price:
+            position.take_profit_price = None
+
+        await db.commit()
+
         return {
             "success": True,
             "message": f"Market sell (FOK) placed for {size:.2f} tokens",

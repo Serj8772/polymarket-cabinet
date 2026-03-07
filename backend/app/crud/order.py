@@ -213,6 +213,47 @@ class CRUDOrder(CRUDBase[Order, BaseModel, BaseModel]):
         )
         return result.scalar_one_or_none()
 
+    async def cancel_orphaned_sl_orders(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        active_position_ids: set[uuid.UUID],
+    ) -> int:
+        """Cancel LIVE SL orders whose positions no longer exist.
+
+        Called after position sync zeroes out stale positions.
+        Returns number of orders cancelled.
+        """
+        query = (
+            select(Order.id)
+            .where(
+                Order.user_id == user_id,
+                Order.status == "LIVE",
+                Order.order_type == "STOP_LOSS",
+                Order.position_id.isnot(None),
+            )
+        )
+        if active_position_ids:
+            query = query.where(
+                Order.position_id.notin_(active_position_ids),
+            )
+
+        result = await db.execute(query)
+        orphaned_ids = [row[0] for row in result.all()]
+
+        if not orphaned_ids:
+            return 0
+
+        stmt = (
+            update(Order)
+            .where(Order.id.in_(orphaned_ids))
+            .values(status="CANCELLED", updated_at=func.now())
+        )
+        await db.execute(stmt)
+        await db.commit()
+        return len(orphaned_ids)
+
 
 # Module-level singleton
 order_crud = CRUDOrder(Order)

@@ -1,6 +1,6 @@
-/** Position list — grid of position cards with empty state */
+/** Position list — sortable table of positions with empty/loading states */
 
-import { PositionCard } from "./PositionCard";
+import { PositionTable } from "./PositionTable";
 import type { Position } from "@/types/portfolio";
 
 interface PositionListProps {
@@ -10,7 +10,7 @@ interface PositionListProps {
 
 export function PositionList({ positions, isLoading }: PositionListProps) {
   if (isLoading) {
-    return <SkeletonGrid />;
+    return <SkeletonTable />;
   }
 
   if (positions.length === 0) {
@@ -37,40 +37,36 @@ export function PositionList({ positions, isLoading }: PositionListProps) {
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {positions.map((position) => (
-        <PositionCard key={position.id} position={position} />
-      ))}
-    </div>
-  );
+  return <PositionTable positions={positions} />;
 }
 
-function SkeletonGrid() {
+function SkeletonTable() {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="overflow-hidden rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)]">
+      {/* Header skeleton */}
+      <div className="flex items-center gap-4 border-b border-[var(--border-color)] px-4 py-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-3 rounded bg-[var(--bg-tertiary)]"
+            style={{ width: i === 0 ? 120 : 60 }}
+          />
+        ))}
+      </div>
+      {/* Row skeletons */}
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-xl border border-[var(--border-color)]/60 bg-[var(--bg-secondary)] p-4"
+          className="flex animate-pulse items-center gap-4 border-b border-[var(--border-color)]/50 px-4 py-3"
         >
-          <div className="mb-3 flex items-start gap-3">
-            <div className="h-10 w-10 shrink-0 rounded-md bg-[var(--bg-tertiary)]" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-12 rounded bg-[var(--bg-tertiary)]" />
-              <div className="h-4 w-full rounded bg-[var(--bg-tertiary)]" />
-            </div>
-          </div>
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            <div className="h-10 rounded-md bg-[var(--bg-tertiary)]" />
-            <div className="h-10 rounded-md bg-[var(--bg-tertiary)]" />
-            <div className="h-10 rounded-md bg-[var(--bg-tertiary)]" />
-            <div className="h-10 rounded-md bg-[var(--bg-tertiary)]" />
-          </div>
-          <div className="flex justify-between">
-            <div className="h-4 w-20 rounded bg-[var(--bg-tertiary)]" />
-            <div className="h-4 w-12 rounded bg-[var(--bg-tertiary)]" />
-          </div>
+          <div className="h-8 w-8 shrink-0 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 flex-1 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-12 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-14 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-14 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-16 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-16 rounded bg-[var(--bg-tertiary)]" />
+          <div className="h-3 w-20 rounded bg-[var(--bg-tertiary)]" />
         </div>
       ))}
     </div>

@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.order import order_crud
 from app.crud.position import position_crud
 from app.models.order import Order
 from app.models.position import Position
@@ -180,6 +181,21 @@ class PortfolioService:
                     zeroed,
                     user.wallet_address[:10],
                 )
+
+        # Cancel orphaned SL orders for positions that no longer exist
+        active_positions = await position_crud.get_user_positions(
+            db, user_id=user.id,
+        )
+        active_pos_ids = {p.id for p in active_positions if float(p.size) > 0}
+        cancelled_sl = await order_crud.cancel_orphaned_sl_orders(
+            db, user_id=user.id, active_position_ids=active_pos_ids,
+        )
+        if cancelled_sl:
+            logger.info(
+                "Cancelled %d orphaned SL orders for user %s",
+                cancelled_sl,
+                user.wallet_address[:10],
+            )
 
         logger.info(
             "Synced %d positions for user %s (wallet=%s)",
