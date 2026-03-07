@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import httpx
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import ApiCreds
+from py_clob_client.clob_types import ApiCreds, TradeParams
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -115,12 +115,20 @@ class OrderService:
             funder=user.proxy_wallet or user.wallet_address,
         )
 
-        # Fetch from Polymarket CLOB API (with proper L2 auth)
+        # Build token_id → title lookup from user's positions
+        positions = await position_crud.get_user_positions(
+            db, user_id=user.id, active_only=False, limit=500,
+        )
+        token_title_map: dict[str, str] = {
+            pos.token_id: pos.title for pos in positions if pos.title
+        }
+
+        # Fetch LIVE orders from Polymarket CLOB API
         try:
             raw_orders = client.get_orders()
         except Exception as e:
             logger.error("Failed to fetch orders from CLOB API: %s", e)
-            return 0
+            raw_orders = []
 
         if not raw_orders:
             logger.info("No live orders found for user %s", user.wallet_address)
@@ -136,89 +144,153 @@ class OrderService:
                     resolved,
                     user.wallet_address,
                 )
+
+        # Process LIVE orders from CLOB API
+        count = 0
+        if raw_orders:
+            # Collect token_ids missing from positions for title lookup
+            all_token_ids = {
+                str(raw.get("asset_id", ""))
+                for raw in raw_orders
+                if raw.get("asset_id")
+            }
+            missing_token_ids = all_token_ids - set(token_title_map.keys())
+            if missing_token_ids:
+                gamma_titles = await _fetch_market_titles(missing_token_ids)
+                token_title_map.update(gamma_titles)
+
+            # Transform CLOB API response to our format
+            orders_data: list[dict] = []
+            for raw in raw_orders:
+                order_id = raw.get("id", "")
+                if not order_id:
+                    continue
+
+                market_id = raw.get("market", "")
+                token_id = raw.get("asset_id", "")
+                if not market_id or not token_id:
+                    continue
+
+                placed_at = _parse_datetime(raw.get("created_at"))
+                orders_data.append({
+                    "polymarket_order_id": str(order_id),
+                    "market_id": str(market_id),
+                    "token_id": str(token_id),
+                    "side": raw.get("side", "BUY").upper(),
+                    "outcome": raw.get("outcome", "Unknown"),
+                    "order_type": raw.get("order_type", raw.get("type", "GTC")).upper(),
+                    "size": _parse_float(raw.get("original_size", 0)),
+                    "price": _parse_float(raw.get("price", 0)),
+                    "size_filled": _parse_float(raw.get("size_matched", 0)),
+                    "status": _map_status(raw.get("status", "LIVE")),
+                    "market_question": token_title_map.get(str(token_id)),
+                    "placed_at": placed_at,
+                })
+
+            count = await order_crud.upsert_many(
+                db, user_id=user.id, orders_data=orders_data,
+            )
+
+            # Resolve LIVE orders that disappeared from CLOB API
+            live_order_ids = {d["polymarket_order_id"] for d in orders_data}
+            resolved = await order_crud.resolve_missing_live_orders(
+                db, user_id=user.id, live_order_ids=live_order_ids,
+            )
+            if resolved:
+                logger.info(
+                    "Resolved %d filled orders for user %s",
+                    resolved, user.wallet_address,
+                )
+
+        logger.info(
+            "Synced %d live orders for user %s",
+            count, user.wallet_address,
+        )
+
+        # Also fetch trade history to capture executed/matched orders
+        trades_count = await self._sync_trades(db, user, client, token_title_map)
+
+        return count + trades_count
+
+    async def _sync_trades(
+        self,
+        db: AsyncSession,
+        user: User,
+        client: ClobClient,
+        token_title_map: dict[str, str],
+    ) -> int:
+        """Sync trade history from CLOB API to capture executed orders.
+
+        get_trades() returns fill events — orders that already matched.
+        This ensures executed orders appear in the user's order history.
+        """
+        try:
+            raw_trades = client.get_trades(TradeParams())
+        except Exception as e:
+            logger.error("Failed to fetch trades from CLOB API: %s", e)
             return 0
 
-        # Build token_id → title lookup from user's positions
-        positions = await position_crud.get_user_positions(
-            db, user_id=user.id, active_only=False, limit=500,
-        )
-        token_title_map: dict[str, str] = {
-            pos.token_id: pos.title for pos in positions if pos.title
-        }
+        if not raw_trades:
+            return 0
 
-        # Collect all token_ids from orders that are missing from positions
-        all_token_ids = {
-            str(raw.get("asset_id", ""))
-            for raw in raw_orders
-            if raw.get("asset_id")
-        }
-        missing_token_ids = all_token_ids - set(token_title_map.keys())
-
-        # Fetch market titles from Gamma API for missing token_ids
-        if missing_token_ids:
-            gamma_titles = await _fetch_market_titles(missing_token_ids)
-            token_title_map.update(gamma_titles)
-
-        # Transform CLOB API response to our format
-        # Fields: id, status, owner, maker_address, market, asset_id,
-        # side, original_size, size_matched, price, outcome,
-        # expiration, order_type, created_at
-        orders_data: list[dict] = []
-        for raw in raw_orders:
-            order_id = raw.get("id", "")
+        # Deduplicate by taker_order_id — each order can have multiple fills
+        # We want one Order record per order, not per fill
+        order_fills: dict[str, dict] = {}
+        for trade in raw_trades:
+            order_id = trade.get("taker_order_id") or trade.get("id", "")
             if not order_id:
                 continue
 
-            market_id = raw.get("market", "")
-            token_id = raw.get("asset_id", "")
-
+            market_id = trade.get("market", "")
+            token_id = trade.get("asset_id", "")
             if not market_id or not token_id:
                 continue
 
-            # Parse placed_at
-            placed_at = None
-            raw_ts = raw.get("created_at")
-            if raw_ts:
-                placed_at = _parse_datetime(raw_ts)
+            if order_id not in order_fills:
+                placed_at = _parse_datetime(
+                    trade.get("match_time") or trade.get("created_at")
+                )
+                order_fills[order_id] = {
+                    "polymarket_order_id": str(order_id),
+                    "market_id": str(market_id),
+                    "token_id": str(token_id),
+                    "side": trade.get("side", "BUY").upper(),
+                    "outcome": trade.get("outcome", "Unknown"),
+                    "order_type": trade.get("type", trade.get("order_type", "FOK")).upper(),
+                    "size": _parse_float(trade.get("size", 0)),
+                    "price": _parse_float(trade.get("price", 0)),
+                    "size_filled": _parse_float(trade.get("size", 0)),
+                    "status": "MATCHED",
+                    "market_question": token_title_map.get(str(token_id)),
+                    "placed_at": placed_at,
+                }
+            else:
+                # Aggregate multiple fills for the same order
+                existing = order_fills[order_id]
+                existing["size"] += _parse_float(trade.get("size", 0))
+                existing["size_filled"] += _parse_float(trade.get("size", 0))
 
-            orders_data.append({
-                "polymarket_order_id": str(order_id),
-                "market_id": str(market_id),
-                "token_id": str(token_id),
-                "side": raw.get("side", "BUY").upper(),
-                "outcome": raw.get("outcome", "Unknown"),
-                "order_type": raw.get("order_type", raw.get("type", "GTC")).upper(),
-                "size": _parse_float(raw.get("original_size", 0)),
-                "price": _parse_float(raw.get("price", 0)),
-                "size_filled": _parse_float(raw.get("size_matched", 0)),
-                "status": _map_status(raw.get("status", "LIVE")),
-                "market_question": token_title_map.get(str(token_id)),
-                "placed_at": placed_at,
-            })
+        if not order_fills:
+            return 0
 
-        # Upsert live orders
+        # Fetch titles for any token_ids not yet in the map
+        missing_tokens = {
+            v["token_id"] for v in order_fills.values()
+            if not v.get("market_question")
+        }
+        if missing_tokens:
+            extra_titles = await _fetch_market_titles(missing_tokens)
+            for fill in order_fills.values():
+                if not fill.get("market_question"):
+                    fill["market_question"] = extra_titles.get(fill["token_id"])
+
+        trades_data = list(order_fills.values())
         count = await order_crud.upsert_many(
-            db,
-            user_id=user.id,
-            orders_data=orders_data,
+            db, user_id=user.id, orders_data=trades_data,
         )
-
-        # Resolve LIVE orders that disappeared from CLOB API (filled/cancelled)
-        live_order_ids = {d["polymarket_order_id"] for d in orders_data}
-        resolved = await order_crud.resolve_missing_live_orders(
-            db,
-            user_id=user.id,
-            live_order_ids=live_order_ids,
-        )
-        if resolved:
-            logger.info(
-                "Resolved %d filled orders for user %s",
-                resolved,
-                user.wallet_address,
-            )
 
         logger.info(
-            "Synced %d orders for user %s",
+            "Synced %d trades (executed orders) for user %s",
             count,
             user.wallet_address,
         )
