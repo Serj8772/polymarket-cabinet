@@ -28,24 +28,6 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    to: "/markets",
-    label: "Markets",
-    icon: (
-      <svg viewBox="0 0 24 24">
-        <path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22" />
-      </svg>
-    ),
-  },
-  {
-    to: "/portfolio",
-    label: "Portfolio",
-    icon: (
-      <svg viewBox="0 0 24 24">
-        <path d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25" />
-      </svg>
-    ),
-  },
-  {
     to: "/orders",
     label: "Orders",
     icon: (

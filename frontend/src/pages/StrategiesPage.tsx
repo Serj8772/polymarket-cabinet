@@ -1,7 +1,6 @@
 /** Strategies page — arbitrage scanner for multi-bracket events */
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useArbitrageScan } from "@/hooks/useArbitrageScan";
 import type { ArbitrageOpportunity } from "@/types/strategy";
 
@@ -303,13 +302,8 @@ function OpportunityRow({
               >
                 {b.is_tail ? `+${b.profit_pct.toFixed(1)}%` : "-"}
               </span>
-              <span className="text-right">
-                <Link
-                  to={`/markets/${b.market_id}`}
-                  className="text-xs text-[var(--accent-blue)] hover:underline"
-                >
-                  View
-                </Link>
+              <span className="text-right text-xs text-[var(--text-3)]">
+                {b.market_id}
               </span>
             </div>
           ))}

@@ -7,12 +7,9 @@ import { Toaster } from "react-hot-toast";
 import { AppLayout } from "@/components/features/Layout/AppLayout";
 import { AuthGuard } from "@/components/features/Auth/AuthGuard";
 import { DashboardPage } from "@/pages/DashboardPage";
-import { MarketsPage } from "@/pages/MarketsPage";
-import { PortfolioPage } from "@/pages/PortfolioPage";
 import { OrdersPage } from "@/pages/OrdersPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { StrategiesPage } from "@/pages/StrategiesPage";
-import { MarketDetailPage } from "@/pages/MarketDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,12 +29,9 @@ export function App() {
             {/* Public */}
             <Route path="/" element={<DashboardPage />} />
             <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="/markets" element={<MarketsPage />} />
-            <Route path="/markets/:marketId" element={<MarketDetailPage />} />
 
             {/* Protected */}
             <Route element={<AuthGuard />}>
-              <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/strategies" element={<StrategiesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
