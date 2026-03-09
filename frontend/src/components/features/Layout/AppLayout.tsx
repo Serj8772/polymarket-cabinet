@@ -1,21 +1,24 @@
-/** Main application layout with sidebar and header */
+/** Main application layout with top navigation */
 
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
+import { TopNav } from "./TopNav";
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-7xl">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <TopNav />
+      <main className="flex-1 overflow-y-auto">
+        <div
+          className="page-content"
+          style={{
+            maxWidth: "var(--max-w)",
+            margin: "0 auto",
+            padding: "28px 32px 64px",
+          }}
+        >
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }
