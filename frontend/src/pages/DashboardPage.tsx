@@ -294,14 +294,14 @@ export function DashboardPage() {
             </colgroup>
             <thead>
               <tr>
-                <TH className="pl-5">Market</TH>
+                <TH first>Market</TH>
                 <TH align="right">Shares</TH>
                 <TH align="right">Value</TH>
                 <TH align="right" className="hide-mobile">Avg / Now</TH>
                 <TH align="center">SL</TH>
                 <TH align="center">TP</TH>
                 <TH align="right">P&L</TH>
-                <TH className="pr-5" />
+                <TH last />
               </tr>
             </thead>
             <tbody>
@@ -321,19 +321,24 @@ export function DashboardPage() {
 function TH({
   children,
   align,
+  first,
+  last,
   className = "",
 }: {
   children?: React.ReactNode;
   align?: "left" | "right" | "center";
+  first?: boolean;
+  last?: boolean;
   className?: string;
 }) {
   return (
     <th
-      className={`whitespace-nowrap select-none border-b px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider ${className}`}
+      className={`whitespace-nowrap select-none border-b py-2.5 text-[10px] font-semibold uppercase tracking-wider ${className}`}
       style={{
         color: "var(--text-3)",
         borderColor: "var(--border)",
         textAlign: align || "left",
+        padding: `10px ${last ? 20 : 12}px 10px ${first ? 20 : 12}px`,
       }}
     >
       {children}
@@ -379,7 +384,7 @@ function PositionRow({ pos }: { pos: Position }) {
   return (
     <tr className="transition-colors duration-75 hover:bg-white/[.018]">
       {/* Market */}
-      <td className="border-b px-3 py-2.5 pl-5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b py-2.5" style={{ borderColor: "var(--border)", padding: "10px 12px 10px 20px" }}>
         <div className="flex min-w-0 items-center gap-2.5">
           <div
             className="grid h-7 w-7 shrink-0 place-items-center rounded-[var(--r-s)] text-xs"
@@ -422,17 +427,17 @@ function PositionRow({ pos }: { pos: Position }) {
       </TD>
 
       {/* SL */}
-      <td className="border-b px-3 py-2.5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b" style={{ borderColor: "var(--border)", padding: "10px 12px" }}>
         <SLTPCell positionId={pos.id} type="sl" value={pos.stop_loss_price} />
       </td>
 
       {/* TP */}
-      <td className="border-b px-3 py-2.5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b" style={{ borderColor: "var(--border)", padding: "10px 12px" }}>
         <SLTPCell positionId={pos.id} type="tp" value={pos.take_profit_price} />
       </td>
 
       {/* P&L */}
-      <td className="border-b px-3 py-2.5 text-right" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b text-right" style={{ borderColor: "var(--border)", padding: "10px 12px" }}>
         <div
           className="text-[12.5px] font-semibold leading-tight"
           style={{ color: isProfit ? "var(--green)" : "var(--red)" }}
@@ -445,7 +450,7 @@ function PositionRow({ pos }: { pos: Position }) {
       </td>
 
       {/* Link */}
-      <td className="border-b px-3 py-2.5 pr-5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b py-2.5" style={{ borderColor: "var(--border)", padding: "10px 20px 10px 12px" }}>
         <div className="grid place-items-center">
           {polyLink ? (
             <a
@@ -485,8 +490,9 @@ function TD({
 }) {
   return (
     <td
-      className={`whitespace-nowrap border-b px-3 py-2.5 text-[12.5px] ${bold ? "font-semibold" : ""} ${className}`}
+      className={`whitespace-nowrap border-b text-[12.5px] ${bold ? "font-semibold" : ""} ${className}`}
       style={{
+        padding: "10px 12px",
         borderColor: "var(--border)",
         textAlign: align || "left",
         color: dim ? "var(--text-2)" : "var(--text-1)",
