@@ -1,6 +1,9 @@
 /** Horizontal top navigation bar — replaces Sidebar + Header */
 
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useConnect, useAccount } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { useWeb3Auth } from "@/hooks/useWeb3Auth";
 import { useSyncPositions } from "@/hooks/usePortfolio";
 import { useSyncOrders } from "@/hooks/useOrders";
@@ -13,7 +16,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    to: "/dashboard",
+    to: "/",
     label: "Dashboard",
     icon: (
       <svg viewBox="0 0 24 24">
@@ -73,9 +76,13 @@ const navItems: NavItem[] = [
 ];
 
 export function TopNav() {
-  const { wallet, isAuthenticated, logout } = useWeb3Auth();
+  const { wallet, isAuthenticated, authenticate, logout } = useWeb3Auth();
+  const { connect } = useConnect();
+  const { isConnected } = useAccount();
   const syncPositions = useSyncPositions();
   const syncOrders = useSyncOrders();
+
+  const [authLoading, setAuthLoading] = useState(false);
 
   const isSyncing = syncPositions.isPending || syncOrders.isPending;
 
@@ -89,9 +96,24 @@ export function TopNav() {
     syncOrders.mutate();
   };
 
+  const handleConnect = () => {
+    connect({ connector: injected() });
+  };
+
+  const handleSignIn = async () => {
+    setAuthLoading(true);
+    try {
+      await authenticate();
+    } catch {
+      // error handled by useWeb3Auth
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   return (
     <nav
-      className="sticky top-0 z-100 flex items-center"
+      className="sticky top-0 z-50 flex items-center"
       style={{
         height: "var(--nav-h)",
         background: "var(--bg-1)",
@@ -103,7 +125,7 @@ export function TopNav() {
         style={{ maxWidth: "var(--max-w)" }}
       >
         {/* Brand */}
-        <NavLink to="/dashboard" className="flex shrink-0 items-center gap-2.5">
+        <NavLink to="/" className="flex shrink-0 items-center gap-2.5">
           <div
             className="grid h-[26px] w-[26px] place-items-center text-[13px] font-bold text-white"
             style={{
@@ -124,6 +146,7 @@ export function TopNav() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === "/"}
               className={({ isActive }) =>
                 `flex items-center gap-1.5 rounded-[var(--r-s)] px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
                   isActive
@@ -144,59 +167,78 @@ export function TopNav() {
         </div>
 
         {/* Right section */}
-        {isAuthenticated && (
-          <div className="flex shrink-0 items-center gap-2.5">
-            {/* Sync button */}
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="flex items-center gap-1.5 rounded-[var(--r-s)] border px-3 py-1 text-[11px] font-semibold transition-colors"
-              style={{
-                borderColor: isSyncing
-                  ? "rgba(196,123,90,.2)"
-                  : "var(--border-s)",
-                background: isSyncing
-                  ? "rgba(196,123,90,.08)"
-                  : "var(--bg-2)",
-                color: isSyncing ? "var(--accent)" : "var(--text-2)",
-              }}
-            >
-              <svg
-                className={`h-[13px] w-[13px] fill-none stroke-current stroke-2 ${isSyncing ? "syncing-icon" : ""}`}
-                viewBox="0 0 24 24"
+        <div className="flex shrink-0 items-center gap-2.5">
+          {isAuthenticated ? (
+            <>
+              {/* Sync button */}
+              <button
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="flex items-center gap-1.5 rounded-[var(--r-s)] border px-3 py-1 text-[11px] font-semibold transition-colors"
+                style={{
+                  borderColor: isSyncing
+                    ? "rgba(196,123,90,.2)"
+                    : "var(--border-s)",
+                  background: isSyncing
+                    ? "rgba(196,123,90,.08)"
+                    : "var(--bg-2)",
+                  color: isSyncing ? "var(--accent)" : "var(--text-2)",
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M21.015 4.356v4.992"
-                />
-              </svg>
-              <span className="nav-sync-label">
-                {isSyncing ? "Syncing..." : "Sync"}
+                <svg
+                  className={`h-[13px] w-[13px] fill-none stroke-current stroke-2 ${isSyncing ? "syncing-icon" : ""}`}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M21.015 4.356v4.992"
+                  />
+                </svg>
+                <span className="nav-sync-label">
+                  {isSyncing ? "Syncing..." : "Sync"}
+                </span>
+              </button>
+
+              {/* Wallet address */}
+              <span
+                className="nav-addr rounded-full px-3 py-1 text-[11px]"
+                style={{
+                  fontFamily: "var(--mono)",
+                  color: "var(--text-3)",
+                  background: "var(--bg-2)",
+                }}
+              >
+                {shortAddress}
               </span>
-            </button>
 
-            {/* Wallet address */}
-            <span
-              className="nav-addr rounded-full px-3 py-1 text-[11px]"
-              style={{
-                fontFamily: "var(--mono)",
-                color: "var(--text-3)",
-                background: "var(--bg-2)",
-              }}
-            >
-              {shortAddress}
-            </span>
-
-            {/* Disconnect */}
+              {/* Disconnect */}
+              <button
+                onClick={logout}
+                className="rounded-[var(--r-s)] border-none bg-transparent px-2 py-1 text-[11px] font-medium text-[var(--text-3)] transition-colors hover:bg-[var(--red-d)] hover:text-[var(--red)]"
+              >
+                Disconnect
+              </button>
+            </>
+          ) : isConnected ? (
             <button
-              onClick={logout}
-              className="rounded-[var(--r-s)] border-none bg-transparent px-2 py-1 text-[11px] font-medium text-[var(--text-3)] transition-colors hover:bg-[var(--red-d)] hover:text-[var(--red)]"
+              onClick={handleSignIn}
+              disabled={authLoading}
+              className="rounded-[var(--r-s)] px-4 py-1.5 text-[12px] font-semibold text-white transition-colors disabled:opacity-50"
+              style={{ background: "var(--green)" }}
             >
-              Disconnect
+              {authLoading ? "Signing..." : "Sign In"}
             </button>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={handleConnect}
+              className="rounded-[var(--r-s)] px-4 py-1.5 text-[12px] font-semibold text-white transition-colors"
+              style={{ background: "var(--accent)" }}
+            >
+              Connect
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -128,15 +128,16 @@ textarea {
   .nav-sync-label {
     display: none;
   }
-  .page-content {
-    padding: 20px 16px 48px !important;
-  }
   .summary-grid {
     grid-template-columns: 1fr !important;
   }
 }
 
 @media (max-width: 768px) {
+  .page-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
   .nav-wordmark {
     display: none;
   }
@@ -151,13 +152,6 @@ textarea {
   .card-cash-label,
   .card-cash-val {
     text-align: left !important;
-  }
-  .tbl-wrap {
-    margin: 0 -16px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    -webkit-overflow-scrolling: touch;
   }
   .tbl-wrap table {
     table-layout: auto;

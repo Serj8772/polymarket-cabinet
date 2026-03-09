@@ -9,12 +9,8 @@ export function AppLayout() {
       <TopNav />
       <main className="flex-1 overflow-y-auto">
         <div
-          className="page-content"
-          style={{
-            maxWidth: "var(--max-w)",
-            margin: "0 auto",
-            padding: "28px 32px 64px",
-          }}
+          className="page-content mx-auto px-8 pt-7 pb-16"
+          style={{ maxWidth: "var(--max-w)" }}
         >
           <Outlet />
         </div>

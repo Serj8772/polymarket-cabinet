@@ -44,7 +44,7 @@ function fmtCents(v: number): string {
 /* ─── Main Component ──────────────────────────────────── */
 
 export function DashboardPage() {
-  const { proxyWallet } = useAuthStore();
+  const { jwt, proxyWallet } = useAuthStore();
   const portfolio = usePortfolio();
   const p = portfolio.data;
   const isLoading = portfolio.isLoading;
@@ -56,6 +56,26 @@ export function DashboardPage() {
   }, [p?.positions]);
 
   const totalValue = p ? p.total_value + p.cash_balance : 0;
+
+  /* ─── Unauthenticated state ─── */
+  if (!jwt) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32">
+        <div
+          className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold text-white"
+          style={{ background: "linear-gradient(135deg, var(--accent), #a06040)" }}
+        >
+          P
+        </div>
+        <h1 className="mt-5 text-[24px] font-bold" style={{ color: "var(--text-1)" }}>
+          Polymarket Cabinet
+        </h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--text-3)" }}>
+          Connect your wallet to view portfolio, positions, and analytics
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -274,14 +294,14 @@ export function DashboardPage() {
             </colgroup>
             <thead>
               <tr>
-                <TH>Market</TH>
+                <TH className="pl-5">Market</TH>
                 <TH align="right">Shares</TH>
                 <TH align="right">Value</TH>
                 <TH align="right" className="hide-mobile">Avg / Now</TH>
                 <TH align="center">SL</TH>
                 <TH align="center">TP</TH>
                 <TH align="right">P&L</TH>
-                <TH />
+                <TH className="pr-5" />
               </tr>
             </thead>
             <tbody>
@@ -309,7 +329,7 @@ function TH({
 }) {
   return (
     <th
-      className={`whitespace-nowrap select-none border-b px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider first:pl-5 last:pr-5 ${className}`}
+      className={`whitespace-nowrap select-none border-b px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider ${className}`}
       style={{
         color: "var(--text-3)",
         borderColor: "var(--border)",
@@ -359,7 +379,7 @@ function PositionRow({ pos }: { pos: Position }) {
   return (
     <tr className="transition-colors duration-75 hover:bg-white/[.018]">
       {/* Market */}
-      <td className="border-b px-3 py-2.5 first:pl-5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b px-3 py-2.5 pl-5" style={{ borderColor: "var(--border)" }}>
         <div className="flex min-w-0 items-center gap-2.5">
           <div
             className="grid h-7 w-7 shrink-0 place-items-center rounded-[var(--r-s)] text-xs"
@@ -412,7 +432,7 @@ function PositionRow({ pos }: { pos: Position }) {
       </td>
 
       {/* P&L */}
-      <td className="border-b px-3 py-2.5 text-right last:pr-5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b px-3 py-2.5 text-right" style={{ borderColor: "var(--border)" }}>
         <div
           className="text-[12.5px] font-semibold leading-tight"
           style={{ color: isProfit ? "var(--green)" : "var(--red)" }}
@@ -425,7 +445,7 @@ function PositionRow({ pos }: { pos: Position }) {
       </td>
 
       {/* Link */}
-      <td className="border-b px-3 py-2.5 last:pr-5" style={{ borderColor: "var(--border)" }}>
+      <td className="border-b px-3 py-2.5 pr-5" style={{ borderColor: "var(--border)" }}>
         <div className="grid place-items-center">
           {polyLink ? (
             <a
@@ -465,7 +485,7 @@ function TD({
 }) {
   return (
     <td
-      className={`whitespace-nowrap border-b px-3 py-2.5 text-[12.5px] first:pl-5 last:pr-5 ${bold ? "font-semibold" : ""} ${className}`}
+      className={`whitespace-nowrap border-b px-3 py-2.5 text-[12.5px] ${bold ? "font-semibold" : ""} ${className}`}
       style={{
         borderColor: "var(--border)",
         textAlign: align || "left",
